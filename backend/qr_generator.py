@@ -6,8 +6,13 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-UPLOAD_DIR = os.getenv("UPLOAD_DIR", "./uploads")
-FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
+UPLOAD_DIR    = os.getenv("UPLOAD_DIR", "./uploads")
+# Must be set on Render: FRONTEND_URL=https://your-app.vercel.app
+FRONTEND_URL  = os.getenv("FRONTEND_URL", "").rstrip("/")
+if not FRONTEND_URL:
+    # Warn at startup so it's visible in Render logs
+    import warnings
+    warnings.warn("FRONTEND_URL env var is not set! QR codes will have no base URL.", stacklevel=1)
 
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(f"{UPLOAD_DIR}/qrcodes", exist_ok=True)
