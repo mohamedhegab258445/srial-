@@ -5,7 +5,7 @@ import { adminLogin } from "../../lib/api";
 import { ShieldCheck, Lock, User } from "lucide-react";
 
 export default function AdminLoginPage() {
-    const [username, setUsername] = useState("admin");
+    const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
@@ -55,9 +55,7 @@ export default function AdminLoginPage() {
                         {loading ? "جاري التحقق..." : "دخول"}
                     </button>
                 </form>
-                <p className="text-center text-xs text-slate-400">
-                    الإعدادات الافتراضية: admin / admin123
-                </p>
+
             </div>
         </div>
     );
