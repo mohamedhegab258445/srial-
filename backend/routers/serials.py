@@ -142,33 +142,54 @@ def list_serials(
 @router.post("/{serial_number}/activate", response_model=SerialOut, dependencies=[Depends(get_current_admin)])
 def activate_warranty(serial_number: str, payload: SerialActivate, db: Session = Depends(get_db)):
     """Admin: activate warranty by linking serial to customer + purchase date."""
+    import re
+    def norm(phone: str | None) -> str | None:
+        if not phone:
+            return phone
+        digits = re.sub(r"\D", "", phone)
+        if digits.startswith("0") and len(digits) == 11:
+            digits = "2" + digits  # 01x → 201x
+        return digits
+
     serial = db.query(Serial).filter(Serial.serial_number == serial_number.upper()).first()
     if not serial:
         raise HTTPException(status_code=404, detail="Serial not found")
     if serial.warranty_status == "active":
         raise HTTPException(status_code=400, detail="Warranty already activated")
 
+    # Normalize phone before searching
+    normalized_phone = norm(payload.customer_phone)
+
     # Find or create customer
     user = None
-    if payload.customer_phone:
-        user = db.query(User).filter(User.phone == payload.customer_phone).first()
+    if normalized_phone:
+        user = db.query(User).filter(User.phone == normalized_phone).first()
     if not user and payload.customer_email:
         user = db.query(User).filter(User.email == payload.customer_email).first()
     if not user:
         user = User(
             name=payload.customer_name,
-            phone=payload.customer_phone,
+            phone=normalized_phone,
             email=payload.customer_email,
         )
         db.add(user)
         db.flush()
+    else:
+        # Update name if provided
+        if payload.customer_name:
+            user.name = payload.customer_name
 
     serial.user_id = user.id
     serial.purchase_date = payload.purchase_date
     serial.activation_date = datetime.now(timezone.utc)
     serial.warranty_status = "active"
     db.commit()
-    db.refresh(serial)
+
+    # Reload with relationships to satisfy SerialOut schema
+    serial = db.query(Serial).options(
+        joinedload(Serial.product),
+        joinedload(Serial.user),
+    ).filter(Serial.serial_number == serial_number.upper()).first()
     return serial
 
 
