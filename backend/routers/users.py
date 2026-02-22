@@ -53,24 +53,26 @@ def send_whatsapp_otp(phone: str, code: str, db: Session) -> bool:
     token    = os.getenv("ULTRAMSG_TOKEN", "")
 
     if not instance or not token:
-        logger.info("UltraMsg not configured — returning dev_code")
+        logger.warning("UltraMsg not configured — ULTRAMSG_INSTANCE or ULTRAMSG_TOKEN missing")
         return False
 
+    logger.info(f"UltraMsg: sending to={to}, instance={instance}")
     try:
         r = httpx.post(
             f"https://api.ultramsg.com/{instance}/messages/chat",
             data={"token": token, "to": to, "body": message, "priority": "10"},
             timeout=10,
         )
+        logger.warning(f"UltraMsg raw response: status={r.status_code} body={r.text}")
         result = r.json()
         if result.get("sent") == "true" or result.get("id"):
-            logger.info(f"UltraMsg OTP sent to {to}")
+            logger.info(f"UltraMsg OTP sent successfully to {to}")
             return True
         else:
-            logger.warning(f"UltraMsg error: {r.text}")
+            logger.warning(f"UltraMsg rejected: {result}")
             return False
     except Exception as e:
-        logger.warning(f"UltraMsg request failed: {e}")
+        logger.warning(f"UltraMsg request exception: {e}")
         return False
 
 
