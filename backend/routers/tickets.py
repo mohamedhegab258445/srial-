@@ -17,6 +17,9 @@ os.makedirs(f"{UPLOAD_DIR}/attachments", exist_ok=True)
 
 
 def _get_or_create_user(db: Session, name: Optional[str], phone: Optional[str], email: Optional[str]) -> Optional[User]:
+    # Sanitize: convert '' to None to avoid unique constraint on email/phone
+    phone = phone.strip() or None if phone else None
+    email = email.strip() or None if email else None
     if not (phone or email):
         return None
     user = None
@@ -25,7 +28,7 @@ def _get_or_create_user(db: Session, name: Optional[str], phone: Optional[str], 
     if not user and email:
         user = db.query(User).filter(User.email == email).first()
     if not user and name:
-        user = User(name=name, phone=phone, email=email)
+        user = User(name=name, phone=phone, email=email)  # None, not '' → safe
         db.add(user)
         db.flush()
     return user

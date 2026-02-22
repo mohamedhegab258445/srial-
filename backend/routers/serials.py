@@ -157,20 +157,21 @@ def activate_warranty(serial_number: str, payload: SerialActivate, db: Session =
     if serial.warranty_status == "active":
         raise HTTPException(status_code=400, detail="Warranty already activated")
 
-    # Normalize phone before searching
-    normalized_phone = norm(payload.customer_phone)
+    # Normalize phone + sanitize empty strings → None (avoids unique constraint on email)
+    normalized_phone = norm(payload.customer_phone) or None
+    clean_email      = payload.customer_email.strip() or None if payload.customer_email else None
 
     # Find or create customer
     user = None
     if normalized_phone:
         user = db.query(User).filter(User.phone == normalized_phone).first()
-    if not user and payload.customer_email:
-        user = db.query(User).filter(User.email == payload.customer_email).first()
+    if not user and clean_email:
+        user = db.query(User).filter(User.email == clean_email).first()
     if not user:
         user = User(
             name=payload.customer_name,
             phone=normalized_phone,
-            email=payload.customer_email,
+            email=clean_email,   # None not '' → no unique constraint issue
         )
         db.add(user)
         db.flush()

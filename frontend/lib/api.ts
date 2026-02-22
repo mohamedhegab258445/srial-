@@ -19,6 +19,22 @@ api.interceptors.request.use((config) => {
     return config;
 });
 
+// Auto-redirect to login on 401 (expired / invalid token)
+api.interceptors.response.use(
+    (res) => res,
+    (err) => {
+        if (err.response?.status === 401 && typeof window !== "undefined") {
+            const url = err.config?.url || "";
+            // Only redirect admin routes, not customer auth routes
+            if (!url.includes("/auth/otp") && !url.includes("/customer/") && !url.includes("/check/")) {
+                localStorage.removeItem("admin_token");
+                window.location.href = "/admin";
+            }
+        }
+        return Promise.reject(err);
+    }
+);
+
 // ─── Serial ─────────────────────────────────────────────
 export const lookupSerial = (sn: string) => api.get(`/api/serials/${sn}`);
 export const getSerialQR = (sn: string) => `${API_URL}/api/serials/${sn}/qr`;
