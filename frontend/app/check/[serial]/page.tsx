@@ -200,7 +200,7 @@ export default function CheckPage({ params }: { params: Promise<{ serial: string
                                     className="flex items-center gap-2 px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 text-sm font-medium rounded-xl transition-colors">
                                     <ShieldCheck size={14} /> شهادة الضمان
                                 </Link>
-                                <Link href={`/portal/ticket/new?serial=${data.serial_number}`}
+                                <Link href={`/ticket/new?serial=${data.serial_number}`}
                                     className="flex items-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 text-sm font-medium rounded-xl transition-colors">
                                     <AlertTriangle size={14} /> الإبلاغ عن عطل
                                 </Link>
