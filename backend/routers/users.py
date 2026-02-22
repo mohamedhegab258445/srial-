@@ -38,10 +38,9 @@ def normalize_phone(contact: str) -> str:
 
 def send_whatsapp_otp(phone: str, code: str, db: Session) -> bool:
     """
-    Send OTP via the local WhatsApp Gateway (localhost:3001).
-    Falls back gracefully if the gateway isn't running or not connected.
+    Send OTP via UltraMsg WhatsApp API.
+    Falls back gracefully if credentials aren't configured.
     """
-    # Read message template from settings (optional customization)
     template = get_setting(
         db, "otp_welcome_msg",
         "مرحباً 👋\nرمز التحقق الخاص بك هو: *{code}*\nصالح لمدة 10 دقائق. لا تشاركه مع أحد."
@@ -50,21 +49,28 @@ def send_whatsapp_otp(phone: str, code: str, db: Session) -> bool:
     to      = normalize_phone(phone)
     message = template.replace("{code}", code)
 
-    gateway_url = os.getenv("WHATSAPP_GATEWAY_URL", "http://localhost:3001")
+    instance = os.getenv("ULTRAMSG_INSTANCE", "")
+    token    = os.getenv("ULTRAMSG_TOKEN", "")
+
+    if not instance or not token:
+        logger.info("UltraMsg not configured — returning dev_code")
+        return False
+
     try:
         r = httpx.post(
-            f"{gateway_url.rstrip('/')}/send",
-            json={"to": to, "message": message},
-            timeout=8,
+            f"https://api.ultramsg.com/{instance}/messages/chat",
+            data={"token": token, "to": to, "body": message, "priority": "10"},
+            timeout=10,
         )
-        if r.status_code == 200 and r.json().get("success"):
-            logger.info(f"WhatsApp OTP sent to {to}")
+        result = r.json()
+        if result.get("sent") == "true" or result.get("id"):
+            logger.info(f"UltraMsg OTP sent to {to}")
             return True
         else:
-            logger.warning(f"Gateway error: {r.text}")
+            logger.warning(f"UltraMsg error: {r.text}")
             return False
     except Exception as e:
-        logger.info(f"WhatsApp gateway not available: {e}")
+        logger.warning(f"UltraMsg request failed: {e}")
         return False
 
 
