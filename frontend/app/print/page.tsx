@@ -5,6 +5,8 @@ import { api } from "../../lib/api";
 import { ShieldCheck, Calendar, Package, Phone, CheckCircle2, XCircle, Clock, Printer, ArrowRight } from "lucide-react";
 import Link from "next/link";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
 interface WarrantyPrintData {
     serial_number: string;
     warranty_status: string;
@@ -157,17 +159,27 @@ function PrintPageContent() {
                         </div>
                     </div>
 
-                    {/* Serial */}
-                    <div className="border-t border-dashed border-slate-200 pt-5 flex items-center justify-between">
+                    {/* Serial + QR */}
+                    <div className="border-t border-dashed border-slate-200 pt-5 flex items-center justify-between gap-4">
                         <div>
                             <p className="text-xs text-slate-400 mb-1">الرقم التسلسلي</p>
                             <p className="font-mono font-bold text-slate-700 text-lg tracking-wider">{data.serial_number}</p>
-                        </div>
-                        <div className="text-right">
-                            <p className="text-xs text-slate-400 mb-1">تاريخ الإصدار</p>
+                            <p className="text-xs text-slate-400 mt-3">تاريخ الإصدار</p>
                             <p className="text-sm font-semibold text-slate-600">
                                 {new Date().toLocaleDateString("ar-EG", { year: "numeric", month: "long", day: "numeric" })}
                             </p>
+                        </div>
+                        {/* QR Code — scannable to verify warranty */}
+                        <div className="flex flex-col items-center gap-1">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                                src={`${API_URL}/api/serials/${data.serial_number}/qr`}
+                                alt={`QR - ${data.serial_number}`}
+                                width={100}
+                                height={100}
+                                className="rounded-lg border border-slate-200 p-1 bg-white"
+                            />
+                            <p className="text-xs text-slate-400">امسح للتحقق</p>
                         </div>
                     </div>
                 </div>

@@ -25,6 +25,7 @@ export default function SerialsPage() {
     const [search, setSearch] = useState("");
     const [loading, setLoading] = useState(false);
     const [page, setPage] = useState(1);
+    const [qrSerial, setQrSerial] = useState<string | null>(null);
 
     const load = () => listSerials({ status: statusFilter || undefined }).then(r => setSerials(r.data)).catch(() => toast.error("تعذر تحميل السيريالات"));
     useEffect(() => { getProducts().then(r => setProducts(r.data)); load(); }, [statusFilter]);
@@ -126,9 +127,12 @@ export default function SerialsPage() {
                                 <td className="text-sm text-slate-500">{s.purchase_date || "—"}</td>
                                 <td>
                                     <div className="flex gap-1">
-                                        <a href={`${API_URL}/api/serials/${s.serial_number}/qr`} target="_blank" className="btn btn-ghost btn-sm" title="QR">
+                                        <button
+                                            className="btn btn-ghost btn-sm" title="QR"
+                                            onClick={() => setQrSerial(s.serial_number)}
+                                        >
                                             <QrCode size={13} />
-                                        </a>
+                                        </button>
                                         {s.warranty_status === "inactive" && (
                                             <button className="btn btn-primary btn-sm" onClick={() => setActivateModal(s.serial_number)}>
                                                 <CheckCircle size={13} /> تفعيل
@@ -217,6 +221,33 @@ export default function SerialsPage() {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* ── QR Modal ─────────────────────────────────────── */}
+            {qrSerial && (
+                <div className="modal-overlay" onClick={() => setQrSerial(null)}>
+                    <div className="modal-box max-w-xs text-center" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-lg font-bold text-slate-800">QR Code</h2>
+                            <button onClick={() => setQrSerial(null)} className="btn btn-ghost btn-sm"><X size={16} /></button>
+                        </div>
+                        <p className="text-sm text-slate-500 font-mono mb-4">{qrSerial}</p>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                            src={`${API_URL}/api/serials/${qrSerial}/qr`}
+                            alt={`QR ${qrSerial}`}
+                            className="w-56 h-56 mx-auto rounded-xl border border-slate-200 p-2 bg-white"
+                        />
+                        <p className="text-xs text-slate-400 mt-3">وجّه الكاميرا للتحقق من الضمان</p>
+                        <a
+                            href={`${API_URL}/api/serials/${qrSerial}/qr`}
+                            download={`${qrSerial}.png`}
+                            className="mt-4 inline-block btn btn-primary btn-sm"
+                        >
+                            تحميل الصورة
+                        </a>
                     </div>
                 </div>
             )}
