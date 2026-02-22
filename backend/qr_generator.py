@@ -45,7 +45,7 @@ def get_qr_bytes(serial_number: str) -> bytes:
         box_size=10,
         border=4,
     )
-    qr.add_data(scan_url)
+    qr.add_data(check_url)
     qr.make(fit=True)
 
     img = qr.make_image(fill_color="#1e1b4b", back_color="white")
