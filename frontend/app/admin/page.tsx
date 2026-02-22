@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { adminLogin } from "@/lib/api";
+import { adminLogin } from "../../lib/api";
 import { ShieldCheck, Lock, User } from "lucide-react";
 
 export default function AdminLoginPage() {

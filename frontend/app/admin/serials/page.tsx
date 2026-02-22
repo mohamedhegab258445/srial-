@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
-import { getProducts, listSerials, generateSerials, activateWarranty } from "@/lib/api";
-import { useToast } from "@/components/ToastProvider";
-import { exportToCSV } from "@/lib/utils";
+import { getProducts, listSerials, generateSerials, activateWarranty } from "../../../lib/api";
+import { useToast } from "../../../components/ToastProvider";
+import { exportToCSV } from "../../../lib/utils";
 import { Plus, QrCode, CheckCircle, X, Search, Download, ChevronLeft, ChevronRight, Hash } from "lucide-react";
 
 interface Serial { id: number; serial_number: string; warranty_status: string; product: { name: string }; user: { name: string } | null; purchase_date: string }

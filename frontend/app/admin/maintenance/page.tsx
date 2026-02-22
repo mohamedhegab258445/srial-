@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { getMaintenance, addMaintenance, listSerials } from "@/lib/api";
+import { getMaintenance, addMaintenance, listSerials } from "../../../lib/api";
 import { Wrench, Plus, X, Search } from "lucide-react";
 
 interface MaintenanceLog { id: number; fault_type: string; technician_name: string; report_date: string; resolved_date: string; parts_replaced: string; notes: string }

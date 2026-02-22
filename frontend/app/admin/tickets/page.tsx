@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
-import { getTickets, updateTicketStatus, deleteTicket } from "@/lib/api";
+import { getTickets, updateTicketStatus, deleteTicket } from "../../../lib/api";
 import { Clock, CheckCircle, AlertCircle, RefreshCw, Trash2, Ticket } from "lucide-react";
-import { useToast } from "@/components/ToastProvider";
+import { useToast } from "../../../components/ToastProvider";
 
 interface TicketItem {
     id: number; title: string; description: string; status: string;

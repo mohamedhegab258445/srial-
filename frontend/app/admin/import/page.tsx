@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
-import { getProducts } from "@/lib/api";
-import { api } from "@/lib/api";
-import { useToast } from "@/components/ToastProvider";
+import { getProducts } from "../../../lib/api";
+import { api } from "../../../lib/api";
+import { useToast } from "../../../components/ToastProvider";
 import { Upload, FileText, CheckCircle, AlertCircle, Download } from "lucide-react";
 
 interface Product { id: number; name: string }

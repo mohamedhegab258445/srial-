@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
-import { getDashboardStats } from "@/lib/api";
-import { useToast } from "@/components/ToastProvider";
-import { exportToCSV } from "@/lib/utils";
+import { getDashboardStats } from "../../../lib/api";
+import { useToast } from "../../../components/ToastProvider";
+import { exportToCSV } from "../../../lib/utils";
 import { ShieldCheck, Package, Hash, Ticket, Users, AlertCircle, Download } from "lucide-react";
 import Link from "next/link";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";

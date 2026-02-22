@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import Image from "next/image";
-import { api } from "@/lib/api";
-import { useToast } from "@/components/ToastProvider";
+import { api } from "../../../lib/api";
+import { useToast } from "../../../components/ToastProvider";
 import { Globe, Phone, MessageSquare, Save, Shield, Wifi, WifiOff, RefreshCw, LogOut } from "lucide-react";
 
 interface SettingsMap { [key: string]: string }

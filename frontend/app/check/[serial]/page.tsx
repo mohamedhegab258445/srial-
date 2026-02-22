@@ -1,6 +1,6 @@
 "use client";
 import { useState, use } from "react";
-import { api } from "@/lib/api";
+import { api } from "../../../lib/api";
 import {
     ShieldCheck, Phone, Hash, Package, Calendar, CheckCircle2,
     XCircle, Clock, AlertTriangle, ChevronRight, ArrowRight,

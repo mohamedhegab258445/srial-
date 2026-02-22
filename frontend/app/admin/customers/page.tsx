@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
-import { api } from "@/lib/api";
-import { useToast } from "@/components/ToastProvider";
-import { exportToCSV } from "@/lib/utils";
+import { api } from "../../../lib/api";
+import { useToast } from "../../../components/ToastProvider";
+import { exportToCSV } from "../../../lib/utils";
 import { Users, Search, Download, ShieldCheck, Ticket, ChevronDown, ChevronUp, Trash2, Edit2, X, Check } from "lucide-react";
 
 interface Customer {

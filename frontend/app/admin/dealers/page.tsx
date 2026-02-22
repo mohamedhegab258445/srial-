@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
-import { api } from "@/lib/api";
-import { useToast } from "@/components/ToastProvider";
-import { exportToCSV } from "@/lib/utils";
+import { api } from "../../../lib/api";
+import { useToast } from "../../../components/ToastProvider";
+import { exportToCSV } from "../../../lib/utils";
 import {
     Users, Plus, X, Download, MapPin, Phone, Mail,
     Trash2, Edit2, Hash, ChevronDown, ChevronUp, Check

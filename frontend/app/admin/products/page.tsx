@@ -1,10 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { getProducts, createProduct, updateProduct, deleteProduct } from "@/lib/api";
+import { getProducts, createProduct, updateProduct, deleteProduct } from "../../../lib/api";
 import { Plus, Trash2, Package, X, Edit2, Check } from "lucide-react";
 import { AxiosError } from "axios";
-import { useToast } from "@/components/ToastProvider";
+import { useToast } from "../../../components/ToastProvider";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
