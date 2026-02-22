@@ -1,7 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { getProducts, createProduct, updateProduct, deleteProduct } from "@/lib/api";
 import { Plus, Trash2, Package, X, Edit2, Check } from "lucide-react";
+import { AxiosError } from "axios";
 import { useToast } from "@/components/ToastProvider";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -34,8 +36,14 @@ export default function ProductsPage() {
 
     const handleDelete = async (id: number, name: string) => {
         if (!confirm(`حذف المنتج "${name}"؟`)) return;
-        try { await deleteProduct(id); toast.success("تم الحذف"); load(); }
-        catch (e: any) { toast.error(e?.response?.data?.detail || "لا يمكن حذف منتج مرتبط بسيريالات"); }
+        try {
+            await deleteProduct(id);
+            toast.success("تم الحذف");
+            load();
+        } catch (err) {
+            const error = err as AxiosError<{ detail: string }>;
+            toast.error(error?.response?.data?.detail || "لا يمكن حذف منتج مرتبط بسيريالات");
+        }
     };
 
     return (
@@ -63,7 +71,13 @@ export default function ProductsPage() {
                         <div key={p.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
                             {p.image_url && (
                                 <div className="h-40 bg-slate-50 overflow-hidden">
-                                    <img src={`${API_URL}${p.image_url}`} alt={p.name} className="w-full h-full object-cover" />
+                                    <Image
+                                        src={`${API_URL}${p.image_url}`}
+                                        alt={p.name}
+                                        className="w-full h-full object-cover"
+                                        width={400}
+                                        height={160}
+                                    />
                                 </div>
                             )}
                             <div className="p-4">

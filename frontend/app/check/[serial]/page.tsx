@@ -7,6 +7,7 @@ import {
     Wrench, Ticket, RefreshCw
 } from "lucide-react";
 import Link from "next/link";
+import { AxiosError } from "axios";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -93,8 +94,9 @@ export default function CheckPage({ params }: { params: Promise<{ serial: string
             const res = await api.post("/api/check/start", { serial, phone });
             setDevCode(res.data.dev_code || "");
             setStep("otp");
-        } catch (err: any) {
-            setError(err?.response?.data?.detail || "حدث خطأ، تحقق من الرقم التسلسلي ورقم الهاتف");
+        } catch (err) {
+            const error = err as AxiosError<{ detail: string }>;
+            setError(error?.response?.data?.detail || "حدث خطأ، تحقق من الرقم التسلسلي ورقم الهاتف");
         } finally { setLoading(false); }
     };
 
@@ -106,8 +108,9 @@ export default function CheckPage({ params }: { params: Promise<{ serial: string
             const res = await api.post("/api/check/verify", { serial, phone, code });
             setData(res.data);
             setStep("result");
-        } catch (err: any) {
-            setError(err?.response?.data?.detail || "رمز التحقق غير صحيح أو منتهي الصلاحية");
+        } catch (err) {
+            const error = err as AxiosError<{ detail: string }>;
+            setError(error?.response?.data?.detail || "رمز التحقق غير صحيح أو منتهي الصلاحية");
         } finally { setLoading(false); }
     };
 

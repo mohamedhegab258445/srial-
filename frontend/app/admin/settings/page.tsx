@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
+import Image from "next/image";
 import { api } from "@/lib/api";
 import { useToast } from "@/components/ToastProvider";
 import { Globe, Phone, MessageSquare, Save, Shield, Wifi, WifiOff, RefreshCw, LogOut } from "lucide-react";
@@ -12,8 +13,8 @@ const GROUPS = [
         icon: Globe,
         color: "indigo",
         fields: [
-            { key: "site_name", label: "اسم الموقع", type: "text", placeholder: "Smart Warranty Tracker" },
-            { key: "footer_text", label: "نص الفوتر", type: "text", placeholder: "جميع الحقوق محفوظة" },
+            { key: "site_name", label: "اسم الموقع", type: "text", placeholder: "Smart Warranty Tracker", hint: "" },
+            { key: "footer_text", label: "نص الفوتر", type: "text", placeholder: "جميع الحقوق محفوظة", hint: "" },
         ]
     },
     {
@@ -152,8 +153,7 @@ function WhatsAppGatewayCard() {
                         <p className="font-semibold text-slate-700">امسح الـ QR بواتساب الخاص بك</p>
                         <p className="text-xs text-slate-400">واتساب → النقاط الثلاث → الأجهزة المرتبطة → ربط جهاز</p>
                         <div className="inline-block bg-white border-4 border-green-200 rounded-2xl p-3 shadow-lg">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={status.qr} alt="WhatsApp QR Code" className="w-52 h-52" />
+                            <Image src={status.qr} alt="WhatsApp QR Code" className="w-52 h-52" width={208} height={208} />
                         </div>
                         <p className="text-xs text-green-600 animate-pulse">في انتظار المسح…</p>
                     </div>
@@ -254,8 +254,8 @@ export default function SettingsPage() {
                                             onChange={e => set(field.key, e.target.value)}
                                         />
                                     )}
-                                    {(field as any).hint && (
-                                        <p className="text-xs text-slate-400 mt-1">{(field as any).hint}</p>
+                                    {field.hint && (
+                                        <p className="text-xs text-slate-400 mt-1">{field.hint}</p>
                                     )}
                                 </div>
                             ))}

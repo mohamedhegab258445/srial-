@@ -7,6 +7,7 @@ import {
     Users, Plus, X, Download, MapPin, Phone, Mail,
     Trash2, Edit2, Hash, ChevronDown, ChevronUp, Check
 } from "lucide-react";
+import { AxiosError } from "axios";
 
 interface Dealer {
     id: number; code: string; name: string; phone: string;
@@ -66,7 +67,10 @@ export default function DealersPage() {
             toast.success("تم الحذف");
             setDealers(prev => prev.filter(x => x.id !== d.id));
             if (selected?.id === d.id) setSelected(null);
-        } catch { toast.error("فشل الحذف"); }
+        } catch (err) {
+            const error = err as AxiosError<{ detail: string }>;
+            toast.error(error?.response?.data?.detail || "فشل الحذف");
+        }
     };
 
     const startEdit = (d: Dealer) => {

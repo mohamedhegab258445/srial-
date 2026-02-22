@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { useToast } from "@/components/ToastProvider";
 import { exportToCSV } from "@/lib/utils";
@@ -27,14 +27,16 @@ export default function CustomersPage() {
     const [editing, setEditing] = useState<number | null>(null);
     const [editForm, setEditForm] = useState({ name: "", phone: "", email: "" });
 
-    const load = (q = search) => {
+    const load = useCallback((q = search) => {
         setLoading(true);
         api.get("/api/admin/customers", { params: { search: q || undefined } })
             .then(r => setCustomers(r.data))
             .catch(() => toast.error("تعذر تحميل العملاء"))
             .finally(() => setLoading(false));
-    };
-    useEffect(() => { load(); }, []);
+    }, [search, toast]);
+
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    useEffect(() => { load(); }, [load]);
 
     const toggleExpand = async (id: number) => {
         if (expanded === id) { setExpanded(null); return; }

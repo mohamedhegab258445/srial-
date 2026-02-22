@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { getTickets, updateTicketStatus, deleteTicket } from "@/lib/api";
 import { Clock, CheckCircle, AlertCircle, RefreshCw, Trash2, Ticket } from "lucide-react";
 import { useToast } from "@/components/ToastProvider";
@@ -22,14 +22,15 @@ export default function TicketsPage() {
     const [expanded, setExpanded] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
 
-    const load = () => {
+    const load = useCallback(() => {
         setLoading(true);
         getTickets(filter || undefined)
             .then(r => setTickets(r.data))
             .catch(() => toast.error("تعذر تحميل التذاكر"))
             .finally(() => setLoading(false));
-    };
-    useEffect(() => { load(); }, [filter]);
+    }, [filter, toast]);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    useEffect(() => { load(); }, [load]);
 
     const changeStatus = async (id: number, status: string) => {
         await updateTicketStatus(id, status);

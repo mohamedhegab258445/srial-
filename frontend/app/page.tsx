@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Search, QrCode, ShieldCheck, Wrench, Package } from "lucide-react";
 
 export default function ScanPage() {
@@ -94,13 +95,13 @@ export default function ScanPage() {
 
       {/* Portal links */}
       <div className="mt-8 flex gap-4">
-        <a href="/" className="text-indigo-200 hover:text-white text-sm underline font-medium">
+        <Link href="/" className="text-indigo-200 hover:text-white text-sm underline font-medium">
           فحص الضمان
-        </a>
+        </Link>
         <span className="text-indigo-400">·</span>
-        <a href="/admin" className="text-indigo-200 hover:text-white text-sm underline">
+        <Link href="/admin" className="text-indigo-200 hover:text-white text-sm underline">
           لوحة الإدارة
-        </a>
+        </Link>
       </div>
     </div>
   );
