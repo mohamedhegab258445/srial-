@@ -105,7 +105,7 @@ def download_warranty_pdf(serial_number: str, db: Session = Depends(get_db)):
     # Title
     c.setFillColor(colors.white)
     c.setFont("Helvetica-Bold", 24)
-    c.drawCentredString(w / 2, h - 55, "Smart Warranty Certificate")
+    c.drawCentredString(w / 2, h - 55, "مودرن هوم - شهادة ضمان")
     c.setFont("Helvetica", 13)
     c.drawCentredString(w / 2, h - 80, "شهادة الضمان الرسمية")
 
@@ -146,7 +146,7 @@ def download_warranty_pdf(serial_number: str, db: Session = Depends(get_db)):
     # Footer
     c.setFillColor(colors.HexColor("#94A3B8"))
     c.setFont("Helvetica", 9)
-    c.drawCentredString(w / 2, 40, f"Generated: {datetime.now().strftime('%Y-%m-%d')}  |  Smart Warranty Tracker")
+    c.drawCentredString(w / 2, 40, f"Generated: {datetime.now().strftime('%Y-%m-%d')}  |  مودرن هوم")
 
     c.save()
     buf.seek(0)

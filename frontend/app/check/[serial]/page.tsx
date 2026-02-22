@@ -129,7 +129,7 @@ export default function CheckPage({ params }: { params: Promise<{ serial: string
                             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-md">
                                 <ShieldCheck size={18} className="text-white" />
                             </div>
-                            <span className="font-bold text-slate-700">Smart Warranty</span>
+                            <span className="font-bold text-slate-700">مودرن هوم</span>
                         </div>
                         <button
                             onClick={() => { setStep("phone"); setCode(""); setData(null); setError(""); }}

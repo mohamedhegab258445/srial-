@@ -33,7 +33,7 @@ export default function AdminLoginPage() {
                         <ShieldCheck size={28} className="text-white" />
                     </div>
                     <h1 className="text-2xl font-bold text-slate-800">لوحة الإدارة</h1>
-                    <p className="text-slate-500 text-sm mt-1">Smart Warranty Tracker</p>
+                    <p className="text-slate-500 text-sm mt-1">مودرن هوم</p>
                 </div>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>

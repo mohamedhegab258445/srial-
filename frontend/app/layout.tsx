@@ -3,8 +3,8 @@ import "./globals.css";
 import { ToastProvider } from "../components/ToastProvider";
 
 export const metadata: Metadata = {
-  title: "Smart Warranty Tracker",
-  description: "Track your product warranty, maintenance history, and support tickets with ease.",
+  title: "مودرن هوم | فحص الضمان",
+  description: "تحقق من ضمان منتجاتك وفواتيرك بسهولة — مودرن هوم.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

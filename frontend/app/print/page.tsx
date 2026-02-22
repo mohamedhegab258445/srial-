@@ -109,7 +109,7 @@ function PrintPageContent() {
                                 <ShieldCheck size={26} className="text-white" />
                             </div>
                             <div>
-                                <p className="text-white/70 text-xs uppercase tracking-widest">Smart Warranty</p>
+                                <p className="text-white/70 text-xs uppercase tracking-widest">Modern Home</p>
                                 <h1 className="text-xl font-bold">شهادة الضمان</h1>
                             </div>
                         </div>
@@ -175,7 +175,7 @@ function PrintPageContent() {
                 {/* Footer */}
                 <div className="bg-slate-50 px-8 py-4 text-center border-t border-slate-100">
                     <p className="text-xs text-slate-400">
-                        هذه الشهادة صادرة إلكترونياً من نظام <span className="font-semibold text-indigo-500">Smart Warranty</span> ويمكن التحقق منها على الموقع
+                        هذه الشهادة صادرة إلكترونياً من <span className="font-semibold text-indigo-500">مودرن هوم</span> ويمكن التحقق منها على الموقع
                     </p>
                 </div>
             </div>

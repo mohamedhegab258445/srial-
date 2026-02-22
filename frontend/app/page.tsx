@@ -23,9 +23,9 @@ export default function ScanPage() {
         <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-white/10 mb-5 ring-2 ring-white/20">
           <ShieldCheck size={42} className="text-white" />
         </div>
-        <h1 className="text-4xl font-bold mb-2">Smart Warranty Tracker</h1>
+        <h1 className="text-4xl font-bold mb-2">مودرن هوم</h1>
         <p className="text-indigo-200 text-lg">
-          امسح رمز الـ QR أو أدخل الرقم التسلسلي لفحص حالة الضمان
+          امسح رمز الـ QR أو أدخل الرقم التسلسلي للتحقق من الضمان والفاتورة
         </p>
       </div>
 

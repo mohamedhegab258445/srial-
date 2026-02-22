@@ -59,7 +59,7 @@ def _seed_default_admin():
 
 
 app = FastAPI(
-    title="Smart Warranty Tracker API",
+    title="مودرن هوم - Warranty API",
     description="API for managing product warranties, serials, QR codes, and support tickets.",
     version="1.0.0",
     lifespan=lifespan,
@@ -110,7 +110,7 @@ app.include_router(check_router)
 @app.get("/")
 def root():
     return {
-        "message": "Smart Warranty Tracker API",
+        "message": "مودرن هوم - Warranty API",
         "docs": "/docs",
         "version": "1.0.0",
     }

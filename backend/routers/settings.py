@@ -28,7 +28,7 @@ class SiteSetting(Base):
 # ─── Defaults seeded on first call ────────────────────────────────────────────
 
 DEFAULTS: dict[str, str] = {
-    "site_name":          "Smart Warranty Tracker",
+    "site_name":          "مودرن هوم",
     "support_email":      "",
     "support_phone":      "",
     "whatsapp_number":    "",

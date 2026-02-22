@@ -13,7 +13,7 @@ const GROUPS = [
         icon: Globe,
         color: "indigo",
         fields: [
-            { key: "site_name", label: "اسم الموقع", type: "text", placeholder: "Smart Warranty Tracker", hint: "" },
+            { key: "site_name", label: "اسم الموقع", type: "text", placeholder: "مودرن هوم", hint: "" },
             { key: "footer_text", label: "نص الفوتر", type: "text", placeholder: "جميع الحقوق محفوظة", hint: "" },
         ]
     },
