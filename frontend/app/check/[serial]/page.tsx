@@ -1,6 +1,7 @@
 "use client";
 import { useState, use } from "react";
 import { api } from "../../../lib/api";
+import Image from "next/image";
 import {
     ShieldCheck, Phone, Hash, Package, Calendar, CheckCircle2,
     XCircle, Clock, AlertTriangle, ChevronRight, ArrowRight,
@@ -126,8 +127,8 @@ export default function CheckPage({ params }: { params: Promise<{ serial: string
                     {/* Header */}
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-md">
-                                <ShieldCheck size={18} className="text-white" />
+                            <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm overflow-hidden border border-slate-100 p-1">
+                                <Image src="/logo.png" alt="Modern Home" width={32} height={32} className="object-contain" />
                             </div>
                             <span className="font-bold text-slate-700">مودرن هوم</span>
                         </div>

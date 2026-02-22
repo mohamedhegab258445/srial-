@@ -2,7 +2,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { adminLogin } from "../../lib/api";
-import { ShieldCheck, Lock, User } from "lucide-react";
+import Image from "next/image";
+import { Lock, User } from "lucide-react";
 
 export default function AdminLoginPage() {
     const [username, setUsername] = useState("");
@@ -29,8 +30,8 @@ export default function AdminLoginPage() {
         <div className="min-h-screen bg-scan-gradient flex items-center justify-center px-4">
             <div className="glass w-full max-w-sm p-8 space-y-6">
                 <div className="text-center">
-                    <div className="inline-flex w-14 h-14 items-center justify-center bg-indigo-600 rounded-2xl mb-4">
-                        <ShieldCheck size={28} className="text-white" />
+                    <div className="inline-flex w-20 h-20 items-center justify-center bg-white rounded-2xl mb-4 overflow-hidden shadow">
+                        <Image src="/logo.png" alt="Modern Home" width={80} height={80} className="object-contain" />
                     </div>
                     <h1 className="text-2xl font-bold text-slate-800">لوحة الإدارة</h1>
                     <p className="text-slate-500 text-sm mt-1">مودرن هوم</p>

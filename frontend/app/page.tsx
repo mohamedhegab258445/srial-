@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { Search, QrCode, ShieldCheck, Wrench, Package } from "lucide-react";
 
 export default function ScanPage() {
@@ -20,8 +21,8 @@ export default function ScanPage() {
     <div className="min-h-screen bg-scan-gradient flex flex-col items-center justify-center px-4 py-12">
       {/* Hero */}
       <div className="text-center text-white mb-10">
-        <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-white/10 mb-5 ring-2 ring-white/20">
-          <ShieldCheck size={42} className="text-white" />
+        <div className="inline-flex items-center justify-center w-24 h-24 rounded-2xl bg-white/10 mb-5 ring-2 ring-white/20 overflow-hidden">
+          <Image src="/logo.png" alt="Modern Home Logo" width={96} height={96} className="object-contain" />
         </div>
         <h1 className="text-4xl font-bold mb-2">مودرن هوم</h1>
         <p className="text-indigo-200 text-lg">

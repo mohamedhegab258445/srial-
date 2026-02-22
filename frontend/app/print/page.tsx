@@ -2,6 +2,7 @@
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { api } from "../../lib/api";
+import Image from "next/image";
 import { ShieldCheck, Calendar, Package, Phone, CheckCircle2, XCircle, Clock, Printer, ArrowRight } from "lucide-react";
 import Link from "next/link";
 
@@ -107,8 +108,8 @@ function PrintPageContent() {
                 <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 px-8 py-6 text-white">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                                <ShieldCheck size={26} className="text-white" />
+                            <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-inner overflow-hidden border border-slate-100 p-1">
+                                <Image src="/logo.png" alt="Modern Home" width={40} height={40} className="object-contain" />
                             </div>
                             <div>
                                 <p className="text-white/70 text-xs uppercase tracking-widest">Modern Home</p>
