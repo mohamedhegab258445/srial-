@@ -54,120 +54,86 @@ const colorMap: Record<string, string> = {
     green: "bg-green-50 text-green-600",
 };
 
-// ─── WhatsApp Gateway Card ────────────────────────────────────────────────────
+// ─── UltraMsg Status Card ─────────────────────────────────────────────────────
 
-function WhatsAppGatewayCard() {
-    const [status, setStatus] = useState<{ ready: boolean; qr: string | null; phone: string | null } | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [disconnecting, setDisconnecting] = useState(false);
+function UltraMsgStatusCard() {
+    const [status, setStatus] = useState<"loading" | "connected" | "error">("loading");
+    const [info, setInfo] = useState<{ instance: string; phone?: string } | null>(null);
 
-    const GW = "http://localhost:3001";
-
-    const fetchStatus = useCallback(async () => {
+    const checkStatus = useCallback(async () => {
+        setStatus("loading");
         try {
-            const r = await fetch(`${GW}/status`);
-            setStatus(await r.json());
+            const r = await api.get("/api/admin/settings/whatsapp-status");
+            if (r.data.configured) {
+                setStatus("connected");
+                setInfo({ instance: r.data.instance, phone: r.data.phone });
+            } else {
+                setStatus("error");
+            }
         } catch {
-            setStatus(null);
-        } finally {
-            setLoading(false);
+            setStatus("error");
         }
     }, []);
 
-    useEffect(() => {
-        fetchStatus();
-        // Poll every 3s while not connected
-        const iv = setInterval(fetchStatus, 3000);
-        return () => clearInterval(iv);
-    }, [fetchStatus]);
-
-    const handleLogout = async () => {
-        setDisconnecting(true);
-        try { await fetch(`${GW}/logout`, { method: "POST" }); } catch { }
-        setTimeout(fetchStatus, 1000);
-        setDisconnecting(false);
-    };
+    useEffect(() => { checkStatus(); }, [checkStatus]);
 
     return (
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-            {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-50">
                 <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-xl bg-green-50 text-green-600 flex items-center justify-center">
                         <MessageSquare size={18} />
                     </div>
                     <div>
-                        <h2 className="font-semibold text-slate-700">ربط واتساب — إرسال OTP</h2>
-                        <p className="text-xs text-slate-400">امسح الـ QR بهاتفك لتفعيل الإرسال</p>
+                        <h2 className="font-semibold text-slate-700">واتساب OTP — UltraMsg</h2>
+                        <p className="text-xs text-slate-400">إرسال رموز التحقق عبر واتساب</p>
                     </div>
                 </div>
-                <button onClick={fetchStatus} className="btn btn-ghost btn-sm">
+                <button onClick={checkStatus} className="btn btn-ghost btn-sm flex items-center gap-1 text-xs text-slate-400 hover:text-slate-600">
                     <RefreshCw size={13} /> تحديث
                 </button>
             </div>
 
             <div className="p-6">
-                {loading ? (
+                {status === "loading" ? (
                     <div className="flex justify-center py-8">
                         <div className="w-8 h-8 border-4 border-green-200 border-t-green-500 rounded-full animate-spin" />
                     </div>
-                ) : status === null ? (
-                    /* Gateway not running */
+                ) : status === "connected" ? (
+                    <div className="text-center space-y-3">
+                        <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto">
+                            <Wifi size={28} className="text-green-500" />
+                        </div>
+                        <p className="font-bold text-green-700 text-lg">UltraMsg متصل ✅</p>
+                        {info?.instance && (
+                            <p className="text-sm text-slate-500 font-mono bg-slate-50 rounded-lg px-3 py-1.5 inline-block">
+                                Instance: {info.instance}
+                            </p>
+                        )}
+                        <p className="text-xs text-slate-400">سيتم إرسال OTP تلقائياً عبر واتساب</p>
+                    </div>
+                ) : (
                     <div className="text-center py-6 space-y-3">
                         <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto">
                             <WifiOff size={24} className="text-slate-400" />
                         </div>
-                        <p className="font-semibold text-slate-600">الـ Gateway غير مشغّل</p>
-                        <p className="text-sm text-slate-400">شغّل الـ gateway أولاً ثم اضغط تحديث</p>
-                        <div className="bg-slate-50 rounded-xl p-3 text-left text-xs font-mono text-slate-500 border border-slate-100">
-                            cd whatsapp-gateway<br />
-                            npm install<br />
-                            node server.js
-                        </div>
-                    </div>
-                ) : status.ready ? (
-                    /* Connected */
-                    <div className="text-center space-y-4">
-                        <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto">
-                            <Wifi size={28} className="text-green-500" />
-                        </div>
-                        <div>
-                            <p className="font-bold text-green-700 text-lg">واتساب متصل ✅</p>
-                            {status.phone && (
-                                <p className="text-sm text-slate-500 mt-1 font-mono">{status.phone}</p>
-                            )}
-                            <p className="text-xs text-slate-400 mt-1">سيتم إرسال OTP تلقائياً عبر هذا الرقم</p>
-                        </div>
-                        <button
-                            onClick={handleLogout}
-                            disabled={disconnecting}
-                            className="btn btn-danger btn-sm"
+                        <p className="font-semibold text-slate-600">UltraMsg غير مضبوط</p>
+                        <p className="text-sm text-slate-400">أضف ULTRAMSG_INSTANCE و ULTRAMSG_TOKEN في متغيرات البيئة على Render</p>
+                        <a
+                            href="https://ultramsg.com"
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-block text-xs text-indigo-500 hover:underline"
                         >
-                            <LogOut size={13} />
-                            {disconnecting ? "جاري قطع الاتصال..." : "قطع الاتصال"}
-                        </button>
-                    </div>
-                ) : status.qr ? (
-                    /* QR code available */
-                    <div className="text-center space-y-3">
-                        <p className="font-semibold text-slate-700">امسح الـ QR بواتساب الخاص بك</p>
-                        <p className="text-xs text-slate-400">واتساب → النقاط الثلاث → الأجهزة المرتبطة → ربط جهاز</p>
-                        <div className="inline-block bg-white border-4 border-green-200 rounded-2xl p-3 shadow-lg">
-                            <Image src={status.qr} alt="WhatsApp QR Code" className="w-52 h-52" width={208} height={208} />
-                        </div>
-                        <p className="text-xs text-green-600 animate-pulse">في انتظار المسح…</p>
-                    </div>
-                ) : (
-                    /* Loading/initializing */
-                    <div className="text-center py-6 space-y-3">
-                        <div className="w-10 h-10 border-4 border-green-200 border-t-green-500 rounded-full animate-spin mx-auto" />
-                        <p className="text-sm text-slate-500">Gateway يعمل… جاري توليد QR</p>
+                            ultramsg.com ←
+                        </a>
                     </div>
                 )}
             </div>
         </div>
     );
 }
+
 
 // ─── Main Settings Page ───────────────────────────────────────────────────────
 
@@ -217,7 +183,7 @@ export default function SettingsPage() {
             </div>
 
             {/* ── WhatsApp QR Card (top, prominent) ── */}
-            <WhatsAppGatewayCard />
+            <UltraMsgStatusCard />
 
             {/* ── Settings groups ── */}
             {GROUPS.map(group => {

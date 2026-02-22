@@ -77,6 +77,30 @@ def save_settings(items: List[SettingItem], db: Session = Depends(get_db), _=Dep
     return {r.key: r.value for r in rows}
 
 
+@router.get("/whatsapp-status")
+def get_whatsapp_status(_=Depends(get_current_admin)):
+    """Check if UltraMsg is configured."""
+    import os, httpx
+    instance = os.getenv("ULTRAMSG_INSTANCE", "")
+    token    = os.getenv("ULTRAMSG_TOKEN", "")
+    if not instance or not token:
+        return {"configured": False}
+    try:
+        r = httpx.get(
+            f"https://api.ultramsg.com/{instance}/instance/status",
+            params={"token": token},
+            timeout=8,
+        )
+        data = r.json()
+        return {
+            "configured": True,
+            "instance": instance,
+            "status": data.get("status", {}).get("accountStatus", {}).get("substatus", "unknown"),
+        }
+    except Exception as e:
+        return {"configured": True, "instance": instance, "status": "error", "error": str(e)}
+
+
 @router.get("/public")
 def get_public_settings(db: Session = Depends(get_db)):
     """No auth - returns only safe public settings for frontend use."""
