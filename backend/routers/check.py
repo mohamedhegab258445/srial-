@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload
 from pydantic import BaseModel
-import httpx, re, logging
+import httpx, re, logging, os
 
 from database import get_db
 from models import Serial, OTPCode, User
@@ -56,9 +56,10 @@ def send_otp_whatsapp(phone: str, code: str, db: Session) -> bool:
     )
     to = normalize_phone(phone)
     message = template.replace("{code}", code)
+    gateway_url = os.getenv("WHATSAPP_GATEWAY_URL", "http://localhost:3001")
     try:
         r = httpx.post(
-            "http://localhost:3001/send",
+            f"{gateway_url.rstrip('/')}/send",
             json={"to": to, "message": message},
             timeout=8,
         )

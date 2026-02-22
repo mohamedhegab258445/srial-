@@ -4,6 +4,7 @@ from typing import List
 import logging
 import re
 import httpx
+import os
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload
@@ -49,9 +50,10 @@ def send_whatsapp_otp(phone: str, code: str, db: Session) -> bool:
     to      = normalize_phone(phone)
     message = template.replace("{code}", code)
 
+    gateway_url = os.getenv("WHATSAPP_GATEWAY_URL", "http://localhost:3001")
     try:
         r = httpx.post(
-            "http://localhost:3001/send",
+            f"{gateway_url.rstrip('/')}/send",
             json={"to": to, "message": message},
             timeout=8,
         )
