@@ -27,9 +27,11 @@ class Product(Base):
     image_url = Column(String(500))
     specs = Column(Text)  # JSON string
     warranty_months = Column(Integer, nullable=False, default=12)
+    wuilt_product_id = Column(String(200), unique=True, nullable=True, index=True)  # Wuilt productId for matching
     created_at = Column(DateTime, server_default=func.now())
 
     serials = relationship("Serial", back_populates="product")
+
 
 
 class Serial(Base):
