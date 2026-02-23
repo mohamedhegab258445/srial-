@@ -44,12 +44,30 @@ os.makedirs(f"{UPLOAD_DIR}/qrcodes", exist_ok=True)
 os.makedirs(f"{UPLOAD_DIR}/attachments", exist_ok=True)
 
 
+def _run_migrations():
+    """Safely add any new columns to existing tables using ALTER TABLE IF NOT EXISTS."""
+    from sqlalchemy import text
+    migrations = [
+        "ALTER TABLE products ADD COLUMN IF NOT EXISTS wuilt_product_id VARCHAR(200)",
+        "CREATE UNIQUE INDEX IF NOT EXISTS ix_products_wuilt_product_id ON products (wuilt_product_id)",
+    ]
+    with engine.connect() as conn:
+        for sql in migrations:
+            try:
+                conn.execute(text(sql))
+                conn.commit()
+            except Exception as e:
+                print(f"Migration note: {e}")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Create DB tables and seed default admin on startup."""
+    """Create DB tables, run column migrations, and seed default admin on startup."""
     Base.metadata.create_all(bind=engine)
+    _run_migrations()
     _seed_default_admin()
     yield
+
 
 
 def _seed_default_admin():
