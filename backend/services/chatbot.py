@@ -17,11 +17,12 @@ SYSTEM_INSTRUCTION = """
 إذا سألك المستخدم عن رقم تسلسلي (Serial Number)، اطلب منه تزويدك بالرقم للتحقق منه في النظام.
 """
 
-def generate_chat_response(messages: list) -> str:
+def generate_chat_response(messages: list, extra_context: str = "") -> str:
     """
     Generate a response from Gemini based on the message history.
     Args:
         messages (list): A list of dictionaries `[{"role": "user" or "model", "parts": ["text"]}]`
+        extra_context (str): Optional context injected into the system instruction
     Returns:
         str: The AI's response text.
     """
@@ -43,12 +44,17 @@ def generate_chat_response(messages: list) -> str:
                 parts=[{"text": msg["parts"][0]}]
             ))
         
+        # Combine system instructions with any DB lookups
+        final_system_instruction = SYSTEM_INSTRUCTION
+        if extra_context:
+            final_system_instruction += extra_context
+
         # Call the new API
         response = client.models.generate_content(
             model='gemini-2.5-flash',
             contents=contents,
             config=types.GenerateContentConfig(
-                system_instruction=SYSTEM_INSTRUCTION,
+                system_instruction=final_system_instruction,
             ),
         )
 
