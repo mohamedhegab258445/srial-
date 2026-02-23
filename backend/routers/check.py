@@ -13,7 +13,7 @@ from models import Serial, OTPCode, User
 from auth import generate_otp
 from routers.settings import SiteSetting
 from utils import normalize_phone, send_whatsapp_message
-from main import limiter
+from limiter import limiter
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/check", tags=["Warranty Check"])

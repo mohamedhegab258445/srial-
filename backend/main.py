@@ -58,12 +58,9 @@ def _seed_default_admin():
         db.close()
 
 
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
+from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
-
-# Initialize rate limiter based on client IP
-limiter = Limiter(key_func=get_remote_address)
+from limiter import limiter
 
 app = FastAPI(
     title="مودرن هوم - Warranty API",
