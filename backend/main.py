@@ -33,6 +33,7 @@ from routers.erp_expenses import router as erp_expenses_router
 from routers.erp_purchases import router as erp_purchases_router
 from routers.erp_sales import router as erp_sales_router
 from routers.erp_stock import router as erp_stock_router
+from routers.wuilt_webhook import router as wuilt_router
 
 
 load_dotenv()
@@ -142,6 +143,7 @@ app.include_router(erp_expenses_router)
 app.include_router(erp_purchases_router)
 app.include_router(erp_sales_router)
 app.include_router(erp_stock_router)
+app.include_router(wuilt_router)
 
 
 @app.get("/")
