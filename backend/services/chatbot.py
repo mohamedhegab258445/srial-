@@ -40,7 +40,7 @@ def generate_chat_response(messages: list) -> str:
             role = "model" if msg["role"] == "model" else "user"
             contents.append(types.Content(
                 role=role,
-                parts=[types.Part.from_text(msg["parts"][0])]
+                parts=[types.Part.from_text(text=msg["parts"][0])]
             ))
         
         # Call the new API
