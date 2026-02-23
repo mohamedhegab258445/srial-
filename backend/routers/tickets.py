@@ -149,7 +149,26 @@ def update_ticket_status(
             "closed": "مغلقة 🔒"
         }.get(payload.status, payload.status)
         
-        msg = f"مرحباً {ticket.user.name} 👋\nتم تحديث حالة تذكرتك رقم #{ticket.id} إلى: *{status_ar}*"
+        # Load custom template if applicable
+        from routers.settings import SiteSetting
+        setting_key_map = {
+            "in_progress": "ticket_msg_in_progress",
+            "resolved":    "ticket_msg_resolved",
+            "closed":      "ticket_msg_closed"
+        }
+        
+        msg = ""
+        setting_key = setting_key_map.get(payload.status)
+        if setting_key:
+            template = db.query(SiteSetting).filter(SiteSetting.key == setting_key).first()
+            if template and template.value:
+                # Replace placeholders
+                msg = template.value.replace("{name}", ticket.user.name).replace("{ticket_id}", str(ticket.id))
+        
+        # Fallback to the old message if no template logic was met
+        if not msg:
+            msg = f"مرحباً {ticket.user.name} 👋\nتم تحديث حالة تذكرتك رقم #{ticket.id} إلى: *{status_ar}*"
+            
         from utils import send_whatsapp_message
         send_whatsapp_message(ticket.user.phone, msg)
 

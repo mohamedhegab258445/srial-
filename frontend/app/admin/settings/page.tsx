@@ -44,6 +44,16 @@ const GROUPS = [
             { key: "warranty_note", label: "ملاحظة الضمان", type: "textarea", placeholder: "الضمان يشمل عيوب التصنيع فقط" },
         ]
     },
+    {
+        title: "قوالب رسائل الواتساب للتذاكر",
+        icon: MessageSquare,
+        color: "green",
+        fields: [
+            { key: "ticket_msg_in_progress", label: "رسالة: قيد المعالجة ⏳", type: "textarea", placeholder: "مرحباً {name}", hint: "المتغيرات المتاحة: {name}, {ticket_id}" },
+            { key: "ticket_msg_resolved", label: "رسالة: تم الحل ✅", type: "textarea", placeholder: "مرحباً {name}", hint: "المتغيرات المتاحة: {name}, {ticket_id}" },
+            { key: "ticket_msg_closed", label: "رسالة: مغلقة 🔒", type: "textarea", placeholder: "مرحباً {name}", hint: "المتغيرات المتاحة: {name}, {ticket_id}" },
+        ]
+    },
 ];
 
 const colorMap: Record<string, string> = {
