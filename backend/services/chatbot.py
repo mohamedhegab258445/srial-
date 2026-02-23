@@ -1,10 +1,7 @@
 import os
-import google.generativeai as genai
-
-# Configure the API key
-API_KEY = os.getenv("GEMINI_API_KEY")
-if API_KEY:
-    genai.configure(api_key=API_KEY)
+import traceback
+from google import genai
+from google.genai import types
 
 # Define the persona/system prompt
 SYSTEM_INSTRUCTION = """
@@ -28,33 +25,36 @@ def generate_chat_response(messages: list) -> str:
     Returns:
         str: The AI's response text.
     """
-    if not API_KEY:
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
         return "عذراً، نظام المحادثة غير مفعل حالياً لوجود مشكلة في إعدادات السيرفر (API Key مفقود)."
 
     try:
-        # Define model setup
-        # Using gemini-1.5-flash as it supports system instructions and is fast/cost-effective
-        model = genai.GenerativeModel(
-            model_name="gemini-1.5-flash",
-            system_instruction=SYSTEM_INSTRUCTION
+        # Initialize the new SDK client
+        client = genai.Client(api_key=api_key)
+
+        # Build contents from history
+        contents = []
+        for msg in messages:
+            # Map "model" role if used, otherwise it uses exactly what came in
+            role = "model" if msg["role"] == "model" else "user"
+            contents.append(types.Content(
+                role=role,
+                parts=[types.Part.from_text(msg["parts"][0])]
+            ))
+        
+        # Call the new API
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=contents,
+            config=types.GenerateContentConfig(
+                system_instruction=SYSTEM_INSTRUCTION,
+            ),
         )
 
-        # Extract only the history for chat session
-        # Format the messages for GenAI package
-        formatted_history = []
-        for msg in messages[:-1]: # exclude the very last user message for the `send_message` call
-           formatted_history.append({
-               "role": msg["role"],
-               "parts": [msg["parts"][0]]
-           })
-           
-        user_message = messages[-1]["parts"][0]
-        
-        chat_session = model.start_chat(history=formatted_history)
-        
-        response = chat_session.send_message(user_message)
-        return response.text
+        return response.text or "عذراً لم أفهم سؤالك، أعد صياغته."
 
     except Exception as e:
-        print(f"[Chatbot Error]: {e}")
+        print(f"[Chatbot RuntimeError]: {e}")
+        traceback.print_exc()
         return "عذراً، نواجه ضغطاً في الوقت الحالي أو عطلاً مؤقتاً. يرجى المحاولة لاحقاً."
