@@ -17,9 +17,10 @@ if not FRONTEND_URL:
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(f"{UPLOAD_DIR}/qrcodes", exist_ok=True)
 
+from storage import upload_image_to_cloudinary
 
 def generate_qr_code(serial_number: str) -> str:
-    """Generate a QR PNG for a serial number. Returns the file path."""
+    """Generate a QR PNG for a serial number and upload to Cloudinary. Returns the secure URL."""
     check_url = f"{FRONTEND_URL}/check/{serial_number}"
 
     qr = qrcode.QRCode(
@@ -32,12 +33,20 @@ def generate_qr_code(serial_number: str) -> str:
     qr.make(fit=True)
 
     img = qr.make_image(fill_color="#1e1b4b", back_color="white")
+    
+    # Save to bytes buffer
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    buf.seek(0)
+    
+    # Upload to Cloudinary
+    cloudinary_url = upload_image_to_cloudinary(
+        file_content=buf.read(),
+        folder="qrcodes",
+        public_id=f"qr_{serial_number}"
+    )
 
-    filename = f"{serial_number}.png"
-    filepath = os.path.join(UPLOAD_DIR, "qrcodes", filename)
-    img.save(filepath)
-
-    return filepath
+    return cloudinary_url
 
 
 def get_qr_bytes(serial_number: str) -> bytes:

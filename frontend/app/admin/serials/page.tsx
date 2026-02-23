@@ -74,8 +74,13 @@ export default function SerialsPage() {
                         <option value="inactive">غير مفعلة</option>
                         <option value="expired">منتهية</option>
                     </select>
-                    <button className="btn btn-ghost btn-sm" onClick={() => exportToCSV("serials", ["الرقم التسلسلي", "المنتج", "الحالة", "العميل", "تاريخ الشراء"],
-                        filtered.map(s => [s.serial_number, s.product?.name, sLabels[s.warranty_status], s.user?.name || "", s.purchase_date || ""]))}>
+                    <button
+                        className="btn btn-ghost btn-sm"
+                        onClick={() => {
+                            const token = localStorage.getItem("admin_token");
+                            window.open(`${API_URL}/api/serials/admin/export?token=${token || ""}`, "_blank");
+                        }}
+                    >
                         <Download size={14} /> CSV
                     </button>
                     <button className="btn btn-primary" onClick={() => setGenModal(true)}>

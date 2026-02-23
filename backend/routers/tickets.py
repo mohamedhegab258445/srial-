@@ -59,6 +59,8 @@ def create_ticket(payload: TicketCreate, db: Session = Depends(get_db)):
 
 # ─── PUBLIC: Upload attachment ────────────────────────────────────────────────────
 
+from storage import upload_image_to_cloudinary
+
 @router.post("/{ticket_id}/attachments", status_code=201)
 def upload_attachment(ticket_id: int, file: UploadFile = File(...), db: Session = Depends(get_db)):
     ticket = db.query(Ticket).filter(Ticket.id == ticket_id).first()
@@ -69,15 +71,22 @@ def upload_attachment(ticket_id: int, file: UploadFile = File(...), db: Session 
     if ext not in [".jpg", ".jpeg", ".png", ".pdf", ".mp4"]:
         raise HTTPException(status_code=400, detail="File type not allowed")
 
-    filename = f"ticket_{ticket_id}_{file.filename}"
-    filepath = os.path.join(UPLOAD_DIR, "attachments", filename)
-    with open(filepath, "wb") as f:
-        shutil.copyfileobj(file.file, f)
+    file_bytes = file.file.read()
+    
+    try:
+        cloudinary_url = upload_image_to_cloudinary(
+            file_content=file_bytes,
+            folder="tickets",
+            public_id=f"ticket_{ticket_id}_{os.path.basename(file.filename)}"
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to upload attachment: {str(e)}")
 
-    att = TicketAttachment(ticket_id=ticket_id, file_url=f"/uploads/attachments/{filename}")
+    att = TicketAttachment(ticket_id=ticket_id, file_url=cloudinary_url)
     db.add(att)
     db.commit()
-    return {"file_url": att.file_url}
+    db.refresh(att)
+    return {"id": att.id, "file_url": att.file_url}
 
 
 # ─── ADMIN: List tickets ──────────────────────────────────────────────────────────
@@ -122,12 +131,28 @@ def update_ticket_status(
     valid = ["open", "in_progress", "resolved", "closed"]
     if payload.status not in valid:
         raise HTTPException(status_code=400, detail=f"Status must be one of {valid}")
-    ticket = db.query(Ticket).filter(Ticket.id == ticket_id).first()
+    ticket = db.query(Ticket).options(joinedload(Ticket.user)).filter(Ticket.id == ticket_id).first()
     if not ticket:
         raise HTTPException(status_code=404, detail="Ticket not found")
+
+    old_status = ticket.status
     ticket.status = payload.status
     db.commit()
     db.refresh(ticket)
+    
+    # Notify user via WhatsApp if status changed
+    if old_status != payload.status and ticket.user and ticket.user.phone:
+        status_ar = {
+            "open": "مفتوحة 🟢",
+            "in_progress": "قيد المعالجة ⏳",
+            "resolved": "تم الحل ✅",
+            "closed": "مغلقة 🔒"
+        }.get(payload.status, payload.status)
+        
+        msg = f"مرحباً {ticket.user.name} 👋\nتم تحديث حالة تذكرتك رقم #{ticket.id} إلى: *{status_ar}*"
+        from utils import send_whatsapp_message
+        send_whatsapp_message(ticket.user.phone, msg)
+
     return ticket
 
 

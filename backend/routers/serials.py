@@ -194,6 +194,68 @@ def activate_warranty(serial_number: str, payload: SerialActivate, db: Session =
     return serial
 
 
+# ─── ADMIN: Export All Serials to CSV ─────────────────────────────────────────────
+
+from fastapi.responses import StreamingResponse
+import io
+import csv
+
+@router.get("/admin/export")
+def export_serials_csv(token: str = Query(...), db: Session = Depends(get_db)):
+    """Admin: Export all serials to a CSV file."""
+    try:
+        from auth import decode_token
+        payload = decode_token(token)
+        if payload.get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+    serials = db.query(Serial).options(
+        joinedload(Serial.product),
+        joinedload(Serial.user)
+    ).all()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    
+    # Write header
+    writer.writerow([
+        "الرقم التسلسلي", 
+        "المنتج", 
+        "حالة الضمان", 
+        "تاريخ الشراء", 
+        "تاريخ التفعيل", 
+        "اسم العميل", 
+        "رقم هاتف العميل", 
+        "ملاحظات"
+    ])
+
+    # Write data
+    for s in serials:
+        writer.writerow([
+            s.serial_number,
+            s.product.name if s.product else "",
+            s.warranty_status,
+            s.purchase_date.strftime("%Y-%m-%d") if s.purchase_date else "",
+            s.activation_date.strftime("%Y-%m-%d %H:%M:%S") if s.activation_date else "",
+            s.user.name if s.user else "",
+            s.user.phone if s.user else "",
+            s.notes or ""
+        ])
+
+    output.seek(0)
+
+    # Encode to handle Arabic characters correctly in Excel (UTF-8 with BOM)
+    encoded_output = "\ufeff" + output.getvalue()
+
+    return StreamingResponse(
+        iter([encoded_output]),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=serials_export.csv"}
+    )
+
+
 # ─── PUBLIC: Download QR Image ────────────────────────────────────────────────────
 
 @router.get("/{serial_number}/qr")

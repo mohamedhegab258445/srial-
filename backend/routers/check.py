@@ -3,15 +3,17 @@ check.py — Serial-based warranty verification
 Flow: serial + phone → OTP sent to registered phone → return warranty data
 """
 from datetime import datetime, timedelta
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session, joinedload
 from pydantic import BaseModel
-import httpx, re, logging, os
+import re, logging, os
 
 from database import get_db
 from models import Serial, OTPCode, User
 from auth import generate_otp
 from routers.settings import SiteSetting
+from utils import normalize_phone, send_whatsapp_message
+from main import limiter
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/check", tags=["Warranty Check"])
@@ -36,14 +38,6 @@ def get_setting(db: Session, key: str, default: str = "") -> str:
     return s.value if s else default
 
 
-def normalize_phone(phone: str) -> str:
-    """01xxxxxxxxx → 201xxxxxxxxx"""
-    digits = re.sub(r"\D", "", phone)
-    if digits.startswith("0") and len(digits) == 11:
-        digits = "2" + digits
-    return digits
-
-
 def phones_match(a: str, b: str) -> bool:
     """Compare two phone numbers ignoring leading zeros/country codes."""
     return normalize_phone(a) == normalize_phone(b)
@@ -54,38 +48,15 @@ def send_otp_whatsapp(phone: str, code: str, db: Session) -> bool:
         db, "otp_welcome_msg",
         "مرحباً 👋\nرمز التحقق لبوابة الضمان: *{code}*\nصالح لمدة 10 دقائق. لا تشاركه مع أحد."
     )
-    to = normalize_phone(phone)
     message = template.replace("{code}", code)
-
-    instance = os.getenv("ULTRAMSG_INSTANCE", "")
-    token    = os.getenv("ULTRAMSG_TOKEN", "")
-
-    if not instance or not token:
-        logger.info("UltraMsg not configured — returning dev_code")
-        return False
-
-    try:
-        r = httpx.post(
-            f"https://api.ultramsg.com/{instance}/messages/chat",
-            data={"token": token, "to": to, "body": message, "priority": "10"},
-            timeout=10,
-        )
-        result = r.json()
-        if result.get("sent") == "true" or result.get("id"):
-            logger.info(f"UltraMsg OTP sent to {to}")
-            return True
-        else:
-            logger.warning(f"UltraMsg error: {r.text}")
-            return False
-    except Exception as e:
-        logger.warning(f"UltraMsg request failed: {e}")
-        return False
+    return send_whatsapp_message(phone, message)
 
 
 # ─── POST /api/check/start ────────────────────────────────────────────────────
 
 @router.post("/start")
-def check_start(payload: CheckStartRequest, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+def check_start(request: Request, payload: CheckStartRequest, db: Session = Depends(get_db)):
     """
     Validate that the phone matches the serial's registered owner.
     If valid, send OTP to that phone.
@@ -131,7 +102,8 @@ def check_start(payload: CheckStartRequest, db: Session = Depends(get_db)):
 # ─── POST /api/check/verify ───────────────────────────────────────────────────
 
 @router.post("/verify")
-def check_verify(payload: CheckVerifyRequest, db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+def check_verify(request: Request, payload: CheckVerifyRequest, db: Session = Depends(get_db)):
     """Verify OTP and return full warranty data."""
     contact_key = f"check:{payload.serial.upper()}:{normalize_phone(payload.phone)}"
 

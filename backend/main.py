@@ -58,12 +58,23 @@ def _seed_default_admin():
         db.close()
 
 
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+
+# Initialize rate limiter based on client IP
+limiter = Limiter(key_func=get_remote_address)
+
 app = FastAPI(
     title="مودرن هوم - Warranty API",
     description="API for managing product warranties, serials, QR codes, and support tickets.",
     version="1.0.0",
     lifespan=lifespan,
 )
+
+# Attach rate limiter to app
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # ─── CORS ────────────────────────────────────────────────────────────────────────
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
