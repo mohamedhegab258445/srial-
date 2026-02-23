@@ -1,5 +1,6 @@
 import os
 import traceback
+import httpx
 from google import genai
 from google.genai import types
 
@@ -19,13 +20,49 @@ SYSTEM_INSTRUCTION = """
 
 def generate_chat_response(messages: list, extra_context: str = "") -> str:
     """
-    Generate a response from Gemini based on the message history.
+    Generate a response from Alibaba Qwen (Primary) or Gemini (Fallback) based on the message history.
     Args:
         messages (list): A list of dictionaries `[{"role": "user" or "model", "parts": ["text"]}]`
         extra_context (str): Optional context injected into the system instruction
     Returns:
         str: The AI's response text.
     """
+    # Combine system instructions with any DB lookups
+    final_system_instruction = SYSTEM_INSTRUCTION
+    if extra_context:
+        final_system_instruction += extra_context
+
+    # 1. Try Alibaba Qwen API First (Smarter Model)
+    alibaba_key = os.getenv("ALIBABA_API_KEY")
+    if alibaba_key:
+        try:
+            # Format messages for OpenAI/Alibaba compatible mode
+            alibaba_messages = [{"role": "system", "content": final_system_instruction}]
+            for msg in messages:
+                role = "assistant" if msg["role"] == "model" else "user"
+                alibaba_messages.append({"role": role, "content": msg["parts"][0]})
+
+            response = httpx.post(
+                "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {alibaba_key}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "model": "qwen-plus",
+                    "messages": alibaba_messages,
+                },
+                timeout=30.0
+            )
+            response.raise_for_status()
+            data = response.json()
+            return data["choices"][0]["message"]["content"]
+        except Exception as e:
+            print(f"[Chatbot Alibaba Fallback]: {e}")
+            traceback.print_exc()
+            # If Qwen fails, it will continue to Gemini fallback below
+
+    # 2. Fallback to Google Gemini
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
         return "عذراً، نظام المحادثة غير مفعل حالياً لوجود مشكلة في إعدادات السيرفر (API Key مفقود)."
@@ -43,11 +80,6 @@ def generate_chat_response(messages: list, extra_context: str = "") -> str:
                 role=role,
                 parts=[{"text": msg["parts"][0]}]
             ))
-        
-        # Combine system instructions with any DB lookups
-        final_system_instruction = SYSTEM_INSTRUCTION
-        if extra_context:
-            final_system_instruction += extra_context
 
         # Call the new API
         response = client.models.generate_content(
