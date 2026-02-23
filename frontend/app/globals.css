@@ -336,3 +336,86 @@ select.input {
     display: none !important;
   }
 }
+
+/* ─── Mobile Responsive Fixes ───────────────────────────────── */
+@media (max-width: 768px) {
+
+  /* Tighter padding on small screens */
+  main {
+    padding: 1rem !important;
+  }
+
+  /* Tables: scroll horizontally on mobile */
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Card adjustments */
+  .stat-card {
+    padding: 1rem;
+  }
+
+  /* Font scale */
+  h1 {
+    font-size: 1.5rem !important;
+  }
+
+  h2 {
+    font-size: 1.25rem !important;
+  }
+
+  /* Inputs - prevent iOS auto-zoom */
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  /* ERP sidebar: ensure no overflow */
+  .flex-1 {
+    min-width: 0;
+  }
+
+  /* Table font scale */
+  .table th,
+  .table td {
+    font-size: .8rem;
+    padding: .6rem .75rem;
+  }
+
+  /* Buttons bigger touch targets */
+  .btn {
+    min-height: 44px;
+  }
+
+  /* Modal: full width */
+  .max-w-lg,
+  .max-w-2xl {
+    max-width: calc(100vw - 2rem) !important;
+  }
+}
+
+@media (max-width: 480px) {
+
+  /* Stack grids on very small screens */
+  .grid-cols-2 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .grid-cols-4 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+/* ─── Performance: layout hints ─────────────────────────────── */
+img,
+video {
+  content-visibility: auto;
+}
+
+.sidebar-link,
+.btn,
+.glass {
+  will-change: auto;
+  contain: layout style;
+}

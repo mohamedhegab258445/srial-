@@ -3,8 +3,9 @@ import os
 from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from database import engine, Base
@@ -24,10 +25,14 @@ from routers.dealers import router as dealers_router
 from routers.customers import router as customers_router
 from routers.settings import router as settings_router
 from routers.check import router as check_router
-from routers.chat import router as chat_router
 
 # ERP Routers
 from routers.erp_wallets import router as erp_wallets_router
+from routers.erp_suppliers import router as erp_suppliers_router
+from routers.erp_expenses import router as erp_expenses_router
+from routers.erp_purchases import router as erp_purchases_router
+from routers.erp_sales import router as erp_sales_router
+from routers.erp_stock import router as erp_stock_router
 
 
 load_dotenv()
@@ -100,7 +105,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ─── Static Files (uploads) ───────────────────────────────────────────────────────
+# ─── GZip Compression ───────────────────────────────────────────────────────────
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+
+# ─── Security Headers ────────────────────────────────────────────────────────────
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response: Response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    return response
+
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
 # ─── Routers ──────────────────────────────────────────────────────────────────────
@@ -116,10 +134,14 @@ app.include_router(dealers_router)
 app.include_router(customers_router)
 app.include_router(settings_router)
 app.include_router(check_router)
-app.include_router(chat_router)
 
 # ERP
 app.include_router(erp_wallets_router)
+app.include_router(erp_suppliers_router)
+app.include_router(erp_expenses_router)
+app.include_router(erp_purchases_router)
+app.include_router(erp_sales_router)
+app.include_router(erp_stock_router)
 
 
 @app.get("/")
