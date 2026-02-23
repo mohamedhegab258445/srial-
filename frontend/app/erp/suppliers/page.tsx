@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Plus, Users, Search, Edit2, Archive } from "lucide-react";
-import { useToast } from "@/components/ToastProvider";
+import { useToast } from "../../../components/ToastProvider";
 
 interface Supplier {
     id: number;
@@ -18,7 +18,7 @@ export default function SuppliersPage() {
     const [suppliers, setSuppliers] = useState<Supplier[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
-    const { showToast } = useToast();
+    const toast = useToast();
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [formData, setFormData] = useState({
@@ -40,7 +40,7 @@ export default function SuppliersPage() {
                 setSuppliers(data);
             }
         } catch (error) {
-            showToast("خطأ في جلب بيانات الموردين", "error");
+            toast.error("خطأ في جلب بيانات الموردين");
         } finally {
             setLoading(false);
         }
@@ -68,16 +68,16 @@ export default function SuppliersPage() {
             });
 
             if (res.ok) {
-                showToast("تمت إضافة المورد بنجاح", "success");
+                toast.success("تمت إضافة المورد بنجاح");
                 setIsModalOpen(false);
                 setFormData({ name: "", phone: "", address: "", opening_balance: 0 });
                 fetchSuppliers();
             } else {
                 const err = await res.json();
-                showToast(err.detail || "حدث خطأ أثناء الإضافة", "error");
+                toast.error(err.detail || "حدث خطأ أثناء الإضافة");
             }
         } catch (error) {
-            showToast("مشكلة في الاتصال بالخادم", "error");
+            toast.error("مشكلة في الاتصال بالخادم");
         }
     };
 

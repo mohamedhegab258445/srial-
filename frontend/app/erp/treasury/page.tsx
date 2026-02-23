@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Plus, ArrowDown, ArrowUp, RefreshCw, Wallet as WalletIcon } from "lucide-react";
-import { useToast } from "@/components/ToastProvider";
+import { useToast } from "../../../components/ToastProvider";
 
 interface Wallet {
     id: number;
@@ -21,7 +21,7 @@ export default function TreasuryPage() {
     // Form State
     const [amount, setAmount] = useState("");
     const [description, setDescription] = useState("");
-    const { showToast } = useToast();
+    const toast = useToast();
 
     const fetchWallets = async () => {
         try {
@@ -36,7 +36,7 @@ export default function TreasuryPage() {
             }
         } catch (error) {
             console.error(error);
-            showToast("حدث خطأ في جلب بيانات الخزائن", "error");
+            toast.error("حدث خطأ في جلب بيانات الخزائن");
         } finally {
             setLoading(false);
         }
@@ -67,17 +67,17 @@ export default function TreasuryPage() {
             });
 
             if (res.ok) {
-                showToast(txType === "deposit" ? "تم إيداع المبلغ بنجاح" : "تم سحب المبلغ بنجاح", "success");
+                toast.success(txType === "deposit" ? "تم إيداع المبلغ بنجاح" : "تم سحب المبلغ بنجاح");
                 setIsModalOpen(false);
                 setAmount("");
                 setDescription("");
                 fetchWallets();
             } else {
                 const err = await res.json();
-                showToast(err.detail || "حدث خطأ أثناء العملية", "error");
+                toast.error(err.detail || "حدث خطأ أثناء العملية");
             }
         } catch (error) {
-            showToast("مشكلة في الاتصال بالخادم", "error");
+            toast.error("مشكلة في الاتصال بالخادم");
         }
     };
 

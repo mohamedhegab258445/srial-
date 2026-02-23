@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Plus, PackageSearch, Search, Edit2, History } from "lucide-react";
-import { useToast } from "@/components/ToastProvider";
+import { useToast } from "../../../components/ToastProvider";
 
 interface StockItem {
     id: number;
@@ -17,7 +17,7 @@ export default function StockPage() {
     const [items, setItems] = useState<StockItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
-    const { showToast } = useToast();
+    const toast = useToast();
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [formData, setFormData] = useState({
@@ -39,7 +39,7 @@ export default function StockPage() {
                 setItems(data);
             }
         } catch (error) {
-            showToast("خطأ في جلب أرصدة المخزن", "error");
+            toast.error("خطأ في جلب أرصدة المخزن");
         } finally {
             setLoading(false);
         }
@@ -68,16 +68,16 @@ export default function StockPage() {
             });
 
             if (res.ok) {
-                showToast("تمت إضافة الصنف للمخزن بنجاح", "success");
+                toast.success("تمت إضافة الصنف للمخزن بنجاح");
                 setIsModalOpen(false);
                 setFormData({ name: "", quantity: 0, cost_price: 0, selling_price: 0 });
                 fetchStock();
             } else {
                 const err = await res.json();
-                showToast(err.detail || "حدث خطأ أثناء الإضافة", "error");
+                toast.error(err.detail || "حدث خطأ أثناء الإضافة");
             }
         } catch (error) {
-            showToast("مشكلة في الاتصال بالخادم", "error");
+            toast.error("مشكلة في الاتصال بالخادم");
         }
     };
 
@@ -146,8 +146,8 @@ export default function StockPage() {
                                         <td className="px-6 py-4 font-bold text-slate-800">{item.name}</td>
                                         <td className="px-6 py-4 text-center">
                                             <span className={`px-3 py-1 rounded-full text-sm font-bold ${item.quantity > 10 ? 'bg-emerald-100 text-emerald-700' :
-                                                    item.quantity > 0 ? 'bg-amber-100 text-amber-700' :
-                                                        'bg-rose-100 text-rose-700'
+                                                item.quantity > 0 ? 'bg-amber-100 text-amber-700' :
+                                                    'bg-rose-100 text-rose-700'
                                                 }`}>
                                                 {item.quantity}
                                             </span>

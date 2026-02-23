@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Plus, Receipt, Search, FileText } from "lucide-react";
-import { useToast } from "@/components/ToastProvider";
+import { useToast } from "../../../components/ToastProvider";
 
 interface StockItem { id: number; name: string; selling_price: number; quantity: number }
 interface Wallet { id: number; name: string; }
@@ -12,7 +12,7 @@ export default function SalesPage() {
     const [stock, setStock] = useState<StockItem[]>([]);
     const [wallets, setWallets] = useState<Wallet[]>([]);
     const [loading, setLoading] = useState(true);
-    const { showToast } = useToast();
+    const toast = useToast();
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [customerName, setCustomerName] = useState("");
@@ -38,7 +38,7 @@ export default function SalesPage() {
             if (walRes.ok) setWallets(await walRes.json());
 
         } catch (error) {
-            showToast("حدث خطأ في جلب البيانات", "error");
+            toast.error("حدث خطأ في جلب البيانات");
         } finally {
             setLoading(false);
         }
@@ -57,12 +57,12 @@ export default function SalesPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!customerName || items.some(i => !i.stock_item_id || i.quantity <= 0)) {
-            showToast("يرجى ملء جميع الحقول بشكل صحيح", "error");
+            toast.error("يرجى ملء جميع الحقول بشكل صحيح");
             return;
         }
 
         if (paidAmount > 0 && !walletId) {
-            showToast("يرجى تحديد الخزينة التي سيتم إيداع المبلغ المحصل بها", "error");
+            toast.error("يرجى تحديد الخزينة التي سيتم إيداع المبلغ المحصل بها");
             return;
         }
 
@@ -93,7 +93,7 @@ export default function SalesPage() {
             });
 
             if (res.ok) {
-                showToast("تم إصدار وتسجيل فاتورة المبيعات بنجاح", "success");
+                toast.success("تم إصدار وتسجيل فاتورة المبيعات بنجاح");
                 setIsModalOpen(false);
                 setCustomerName("");
                 setCustomerPhone("");
@@ -103,10 +103,10 @@ export default function SalesPage() {
                 fetchData();
             } else {
                 const err = await res.json();
-                showToast(err.detail || "خطأ أثناء التسجيل. تأكد من توفر الكمية بالمخزن", "error");
+                toast.error(err.detail || "خطأ أثناء التسجيل. تأكد من توفر الكمية بالمخزن");
             }
         } catch (error) {
-            showToast("مشكلة في الاتصال بالخادم", "error");
+            toast.error("مشكلة في الاتصال بالخادم");
         }
     };
 

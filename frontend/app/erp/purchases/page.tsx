@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Plus, ShoppingCart, Search, FileText } from "lucide-react";
-import { useToast } from "@/components/ToastProvider";
+import { useToast } from "../../../components/ToastProvider";
 
 interface Supplier { id: number; name: string; }
 interface StockItem { id: number; name: string; cost_price: number; }
@@ -12,7 +12,7 @@ export default function PurchasesPage() {
     const [suppliers, setSuppliers] = useState<Supplier[]>([]);
     const [stock, setStock] = useState<StockItem[]>([]);
     const [loading, setLoading] = useState(true);
-    const { showToast } = useToast();
+    const toast = useToast();
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [supplierId, setSupplierId] = useState("");
@@ -36,7 +36,7 @@ export default function PurchasesPage() {
             if (stkRes.ok) setStock(await stkRes.json());
 
         } catch (error) {
-            showToast("حدث خطأ في جلب البيانات", "error");
+            toast.error("حدث خطأ في جلب البيانات");
         } finally {
             setLoading(false);
         }
@@ -55,7 +55,7 @@ export default function PurchasesPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!supplierId || items.some(i => !i.stock_item_id || i.quantity <= 0)) {
-            showToast("يرجى ملء جميع الحقول بشكل صحيح", "error");
+            toast.error("يرجى ملء جميع الحقول بشكل صحيح");
             return;
         }
 
@@ -80,7 +80,7 @@ export default function PurchasesPage() {
             });
 
             if (res.ok) {
-                showToast("تم تسجيل فاتورة المشتريات بنجاح", "success");
+                toast.success("تم تسجيل فاتورة المشتريات بنجاح");
                 setIsModalOpen(false);
                 setSupplierId("");
                 setPaidAmount(0);
@@ -88,10 +88,10 @@ export default function PurchasesPage() {
                 fetchData();
             } else {
                 const err = await res.json();
-                showToast(err.detail || "خطأ أثناء التسجيل", "error");
+                toast.error(err.detail || "خطأ أثناء التسجيل");
             }
         } catch (error) {
-            showToast("مشكلة في الاتصال بالخادم", "error");
+            toast.error("مشكلة في الاتصال بالخادم");
         }
     };
 
