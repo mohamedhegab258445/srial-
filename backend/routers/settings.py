@@ -82,26 +82,38 @@ def save_settings(items: List[SettingItem], db: Session = Depends(get_db), _=Dep
 
 @router.get("/whatsapp-status")
 def get_whatsapp_status(_=Depends(get_current_admin)):
-    """Check if UltraMsg is configured."""
+    """Check the real self-hosted whatsapp-web.js gateway status."""
     import os, httpx
-    instance = os.getenv("ULTRAMSG_INSTANCE", "")
-    token    = os.getenv("ULTRAMSG_TOKEN", "")
-    if not instance or not token:
-        return {"configured": False}
+    gateway_url = os.getenv("WHATSAPP_GATEWAY_URL", "http://localhost:3001")
     try:
-        r = httpx.get(
-            f"https://api.ultramsg.com/{instance}/instance/status",
-            params={"token": token},
-            timeout=8,
-        )
+        r = httpx.get(f"{gateway_url}/status", timeout=5)
         data = r.json()
         return {
             "configured": True,
-            "instance": instance,
-            "status": data.get("status", {}).get("accountStatus", {}).get("substatus", "unknown"),
+            "ready": data.get("ready", False),
+            "phone": data.get("phone"),
+            "qr": data.get("qr"),   # base64 PNG, None when connected
+            "gateway_url": gateway_url,
         }
     except Exception as e:
-        return {"configured": True, "instance": instance, "status": "error", "error": str(e)}
+        return {
+            "configured": False,
+            "ready": False,
+            "error": str(e),
+            "gateway_url": gateway_url,
+        }
+
+
+@router.post("/whatsapp-logout")
+def whatsapp_logout(_=Depends(get_current_admin)):
+    """Disconnect the WhatsApp session via the self-hosted gateway."""
+    import os, httpx
+    gateway_url = os.getenv("WHATSAPP_GATEWAY_URL", "http://localhost:3001")
+    try:
+        r = httpx.post(f"{gateway_url}/logout", timeout=5)
+        return r.json()
+    except Exception as e:
+        return {"success": False, "error": str(e)}
 
 
 @router.get("/public")
@@ -110,3 +122,4 @@ def get_public_settings(db: Session = Depends(get_db)):
     public_keys = {"site_name", "footer_text", "whatsapp_number", "ticket_note", "warranty_note"}
     rows = db.query(SiteSetting).filter(SiteSetting.key.in_(public_keys)).all()
     return {r.key: r.value for r in rows}
+
