@@ -18,3 +18,4 @@ slowapi>=0.1.9
 cloudinary>=1.41.0
 cloudinary
 python-multipart
+google-generativeai>=0.5.2

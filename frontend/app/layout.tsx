@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ToastProvider } from "../components/ToastProvider";
+import ChatWidget from "../components/ChatWidget";
 
 export const metadata: Metadata = {
   title: "مودرن هوم | فحص الضمان",
@@ -22,6 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <ToastProvider>{children}</ToastProvider>
+        <ChatWidget />
       </body>
     </html>
   );

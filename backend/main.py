@@ -24,6 +24,7 @@ from routers.dealers import router as dealers_router
 from routers.customers import router as customers_router
 from routers.settings import router as settings_router
 from routers.check import router as check_router
+from routers.chat import router as chat_router
 
 
 load_dotenv()
@@ -112,7 +113,7 @@ app.include_router(dealers_router)
 app.include_router(customers_router)
 app.include_router(settings_router)
 app.include_router(check_router)
-
+app.include_router(chat_router)
 
 
 @app.get("/")
