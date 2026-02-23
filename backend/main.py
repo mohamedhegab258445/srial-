@@ -26,6 +26,9 @@ from routers.settings import router as settings_router
 from routers.check import router as check_router
 from routers.chat import router as chat_router
 
+# ERP Routers
+from routers.erp_wallets import router as erp_wallets_router
+
 
 load_dotenv()
 
@@ -114,6 +117,9 @@ app.include_router(customers_router)
 app.include_router(settings_router)
 app.include_router(check_router)
 app.include_router(chat_router)
+
+# ERP
+app.include_router(erp_wallets_router)
 
 
 @app.get("/")

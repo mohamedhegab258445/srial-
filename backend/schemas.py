@@ -178,4 +178,156 @@ class OTPRequest(BaseModel):
 class OTPVerify(BaseModel):
     contact: str
     code: str
+
+
+# ==========================================
+# ERP SYSTEM SCHEMAS (المسار الثاني)
+# ==========================================
+
+class WalletBase(BaseModel):
+    name: str
+    balance: float = 0.0
+
+class WalletCreate(WalletBase):
+    pass
+
+class WalletOut(WalletBase):
+    id: int
+    created_at: datetime
+    model_config = {"from_attributes": True}
+
+
+class TransactionBase(BaseModel):
+    wallet_id: int
+    type: str # 'in', 'out'
+    amount: float
+    description: Optional[str] = None
+    reference_id: Optional[int] = None
+    reference_type: Optional[str] = None
+
+class TransactionCreate(TransactionBase):
+    pass
+
+class TransactionOut(TransactionBase):
+    id: int
+    date: datetime
+    model_config = {"from_attributes": True}
+
+
+class SupplierBase(BaseModel):
+    name: str
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    opening_balance: float = 0.0
+    current_balance: float = 0.0
+
+class SupplierCreate(SupplierBase):
+    pass
+
+class SupplierOut(SupplierBase):
+    id: int
+    created_at: datetime
+    model_config = {"from_attributes": True}
+
+
+class ExpenseCategoryBase(BaseModel):
+    name: str
+
+class ExpenseCategoryCreate(ExpenseCategoryBase):
+    pass
+
+class ExpenseCategoryOut(ExpenseCategoryBase):
+    id: int
+    model_config = {"from_attributes": True}
+
+
+class ExpenseBase(BaseModel):
+    category_id: int
+    amount: float
+    notes: Optional[str] = None
+    wallet_id: Optional[int] = None
+
+class ExpenseCreate(ExpenseBase):
+    pass
+
+class ExpenseOut(ExpenseBase):
+    id: int
+    date: datetime
+    model_config = {"from_attributes": True}
+
+
+class StockItemBase(BaseModel):
+    name: str
+    product_id: Optional[int] = None
+    quantity: int = 0
+    cost_price: float = 0.0
+    selling_price: float = 0.0
+
+class StockItemCreate(StockItemBase):
+    pass
+
+class StockItemOut(StockItemBase):
+    id: int
+    model_config = {"from_attributes": True}
+
+
+class PurchaseOrderItemBase(BaseModel):
+    stock_item_id: int
+    quantity: int
+    unit_price: float
+
+class PurchaseOrderItemCreate(PurchaseOrderItemBase):
+    pass
+
+class PurchaseOrderItemOut(PurchaseOrderItemBase):
+    id: int
+    model_config = {"from_attributes": True}
+
+
+class PurchaseOrderBase(BaseModel):
+    supplier_id: int
+    total_amount: float = 0.0
+    paid_amount: float = 0.0
+    status: str = "pending"
+
+class PurchaseOrderCreate(PurchaseOrderBase):
+    items: List[PurchaseOrderItemCreate]
+
+class PurchaseOrderOut(PurchaseOrderBase):
+    id: int
+    date: datetime
+    items: List[PurchaseOrderItemOut] = []
+    supplier: Optional[SupplierOut] = None
+    model_config = {"from_attributes": True}
+
+
+class SalesInvoiceItemBase(BaseModel):
+    stock_item_id: int
+    quantity: int
+    unit_price: float
+
+class SalesInvoiceItemCreate(SalesInvoiceItemBase):
+    pass
+
+class SalesInvoiceItemOut(SalesInvoiceItemBase):
+    id: int
+    model_config = {"from_attributes": True}
+
+
+class SalesInvoiceBase(BaseModel):
+    customer_name: Optional[str] = None
+    customer_phone: Optional[str] = None
+    total_amount: float = 0.0
+    paid_amount: float = 0.0
+    status: str = "completed"
+
+class SalesInvoiceCreate(SalesInvoiceBase):
+    items: List[SalesInvoiceItemCreate]
+
+class SalesInvoiceOut(SalesInvoiceBase):
+    id: int
+    date: datetime
+    items: List[SalesInvoiceItemOut] = []
+    model_config = {"from_attributes": True}
+
     name: Optional[str] = None  # required on first-time login
