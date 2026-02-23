@@ -51,7 +51,7 @@ def generate_chat_response(messages: list, extra_context: str = "") -> str:
 
         # Call the new API
         response = client.models.generate_content(
-            model='gemini-2.5-flash',
+            model='gemini-1.5-flash',
             contents=contents,
             config=types.GenerateContentConfig(
                 system_instruction=final_system_instruction,
