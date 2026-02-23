@@ -85,13 +85,18 @@ def _process_delivered_order(order: dict, db: Session) -> dict:
     """
     Core logic: given a Wuilt order dict (from webhook or sync),
     upsert the customer and create serials for each item.
-    Returns a summary dict.
+    Exact Wuilt API field names confirmed from store-docs.wuilt.com.
     """
+    # Customer: payload.order.customer.{name, phone, email}
     customer_data = order.get("customer") or {}
-    name  = customer_data.get("name", "")
-    phone = customer_data.get("phone", "")
-    email = customer_data.get("email", "")
-    order_serial = order.get("orderSerial", "")
+    name  = customer_data.get("name", "").strip()
+    phone = customer_data.get("phone", "").strip()
+    email = customer_data.get("email", "").strip()
+
+    # Order serial: payload.order.orderSerial (e.g. "418")
+    order_serial = str(order.get("orderSerial") or order.get("_id") or "")
+
+    # Items: payload.order.items => [{title, quantity, productId, price}]
     items = order.get("items") or []
 
     user = _upsert_customer(db, name, phone, email)
@@ -99,7 +104,10 @@ def _process_delivered_order(order: dict, db: Session) -> dict:
     created_serials = []
     for idx, item in enumerate(items):
         qty = int(item.get("quantity") or 1)
-        title = (item.get("title") or item.get("name") or "").strip()
+        # title: from item.title (confirmed field name from Wuilt docs)
+        title = (item.get("title") or "").strip()
+        # productId is available if we want to do exact matching later
+        wuilt_product_id = item.get("productId", "")
 
         product = _find_product(db, title)
         product_id = product.id if product else WUILT_DEFAULT_PRODUCT_ID
@@ -180,6 +188,7 @@ async def wuilt_webhook(request: Request, db: Session = Depends(get_db)):
 
 
 # ─── GraphQL Queries ─────────────────────────────────────────────────────────
+# Confirmed field names from Wuilt store-docs.wuilt.com API reference
 
 LIST_ORDERS_QUERY = """
 query ListOrders($storeId: ID!, $first: Int!, $offset: Int!) {
@@ -189,12 +198,16 @@ query ListOrders($storeId: ID!, $first: Int!, $offset: Int!) {
     filter: { shippingStatus: DELIVERED, isArchived: false }
   ) {
     nodes {
-      id
+      _id
       orderSerial
       shippingStatus
       createdAt
       customer { name phone email }
-      items { title quantity }
+      items {
+        title
+        quantity
+        productId
+      }
     }
     pageInfo { hasNextPage }
     totalCount
