@@ -295,7 +295,7 @@ def _sync_products_task():
                     created += 1
 
             db.commit()
-            if not data["ListStoreProducts"]["pageInfo"]["hasNextPage"]:
+            if not data.get("products", {}).get("pageInfo", {}).get("hasNextPage", False):
                 break
             offset += page_size
 
