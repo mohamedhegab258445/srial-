@@ -336,12 +336,22 @@ def _sync_customers_task():
             if not nodes:
                 break
 
-            # Extract unique customers from orders
+            # Extract unique customers from orders - track seen phones to avoid UniqueViolation
+            seen_phones = set()
+            seen_emails = set()
             for order in nodes:
                 c = order.get("customer") or {}
                 name  = (c.get("name")  or "").strip()
                 phone = (c.get("phone") or "").strip()
                 email = (c.get("email") or "").strip()
+
+                # Skip if we already processed this customer in this batch
+                if phone and phone in seen_phones:
+                    skipped += 1
+                    continue
+                if email and email in seen_emails:
+                    skipped += 1
+                    continue
 
                 existing = None
                 if phone:
@@ -354,8 +364,14 @@ def _sync_customers_task():
                 else:
                     db.add(User(name=name or "عميل Wuilt", phone=phone or None, email=email or None))
                     created += 1
+                    if phone: seen_phones.add(phone)
+                    if email: seen_emails.add(email)
 
-            db.commit()
+            try:
+                db.commit()
+            except Exception:
+                db.rollback()
+
             has_next = data.get("orders", {}).get("pageInfo", {}).get("hasNextPage", False)
             if not has_next:
                 break
@@ -386,6 +402,7 @@ def _sync_orders_task():
     db = SessionLocal()
     orders_done = serials_done = 0
     try:
+        offset, page_size = 0, 50
         store_id = os.getenv("WUILT_STORE_ID", WUILT_STORE_ID)
         while True:
             data  = _gql(LIST_ORDERS_QUERY, {
