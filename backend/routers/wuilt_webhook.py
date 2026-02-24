@@ -212,59 +212,40 @@ async def wuilt_webhook(request: Request, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# ─── GraphQL Queries ──────────────────────────────────────────────────────────
+# Confirmed from store-docs.wuilt.com sample queries
 
 LIST_PRODUCTS_QUERY = """
-query ListProducts($storeId: ID!, $first: Int!, $offset: Int!) {
-  ListStoreProducts(
-    storeId: $storeId
-    connection: { first: $first, offset: $offset }
-  ) {
+query ListStoreProducts($connection: ProductsConnectionInput, $filter: ProductsFilterInput) {
+  products(connection: $connection, filter: $filter) {
+    totalCount
     nodes {
-      _id
+      id
       title
       images { src }
     }
     pageInfo { hasNextPage }
-    totalCount
-  }
-}
-"""
-
-LIST_CUSTOMERS_QUERY = """
-query ListCustomers($storeId: ID!, $first: Int!, $offset: Int!) {
-  ListStoreCustomers(
-    storeId: $storeId
-    connection: { first: $first, offset: $offset }
-  ) {
-    nodes {
-      name
-      phone
-      email
-    }
-    pageInfo { hasNextPage }
-    totalCount
   }
 }
 """
 
 LIST_ORDERS_QUERY = """
-query ListOrders($storeId: ID!, $first: Int!, $offset: Int!) {
-  ListStoreOrders(
-    storeId: $storeId
-    connection: { first: $first, offset: $offset, sortBy: createdAt, sortOrder: desc }
-    filter: { shippingStatus: DELIVERED, isArchived: false }
-  ) {
+query ListStoreOrders($storeId: ID!, $connection: OrdersConnectionInput, $filter: OrdersFilterInput) {
+  orders(storeId: $storeId, connection: $connection, filter: $filter) {
+    totalCount
     nodes {
-      _id
+      id
       orderSerial
       shippingStatus
       createdAt
-      customer { name phone email }
-      items { title quantity productId }
+      customer { name email phone }
+      items {
+        id
+        quantity
+        title
+        productSnapshot { id title }
+      }
     }
     pageInfo { hasNextPage }
-    totalCount
   }
 }
 """
@@ -283,14 +264,18 @@ def _sync_products_task():
     created = updated = 0
     try:
         offset, page_size = 0, 50
+        store_id = os.getenv("WUILT_STORE_ID", WUILT_STORE_ID)
         while True:
-            data   = _gql(LIST_PRODUCTS_QUERY, {"storeId": WUILT_STORE_ID, "first": page_size, "offset": offset})
-            nodes  = data.get("ListStoreProducts", {}).get("nodes", [])
+            data = _gql(LIST_PRODUCTS_QUERY, {
+                "connection": {"first": page_size, "offset": offset, "sortBy": "createdAt", "sortOrder": "desc"},
+                "filter": {"storeIds": [store_id], "status": "ACTIVE"},
+            })
+            nodes = data.get("products", {}).get("nodes", [])
             if not nodes:
                 break
 
             for p in nodes:
-                wuilt_id = p.get("_id", "")
+                wuilt_id = p.get("id", "")
                 title    = (p.get("title") or "").strip()
                 images   = p.get("images") or []
                 img_url  = images[0].get("src") if images else None
@@ -340,13 +325,20 @@ def _sync_customers_task():
     created = skipped = 0
     try:
         offset, page_size = 0, 50
+        store_id = os.getenv("WUILT_STORE_ID", WUILT_STORE_ID)
         while True:
-            data  = _gql(LIST_CUSTOMERS_QUERY, {"storeId": WUILT_STORE_ID, "first": page_size, "offset": offset})
-            nodes = data.get("ListStoreCustomers", {}).get("nodes", [])
+            data  = _gql(LIST_ORDERS_QUERY, {
+                "storeId": store_id,
+                "connection": {"first": page_size, "offset": offset, "sortBy": "createdAt", "sortOrder": "desc"},
+                "filter": {"isArchived": False},
+            })
+            nodes = data.get("orders", {}).get("nodes", [])
             if not nodes:
                 break
 
-            for c in nodes:
+            # Extract unique customers from orders
+            for order in nodes:
+                c = order.get("customer") or {}
                 name  = (c.get("name")  or "").strip()
                 phone = (c.get("phone") or "").strip()
                 email = (c.get("email") or "").strip()
@@ -364,7 +356,8 @@ def _sync_customers_task():
                     created += 1
 
             db.commit()
-            if not data["ListStoreCustomers"]["pageInfo"]["hasNextPage"]:
+            has_next = data.get("orders", {}).get("pageInfo", {}).get("hasNextPage", False)
+            if not has_next:
                 break
             offset += page_size
 
@@ -393,19 +386,29 @@ def _sync_orders_task():
     db = SessionLocal()
     orders_done = serials_done = 0
     try:
-        offset, page_size = 0, 50
+        store_id = os.getenv("WUILT_STORE_ID", WUILT_STORE_ID)
         while True:
-            data  = _gql(LIST_ORDERS_QUERY, {"storeId": WUILT_STORE_ID, "first": page_size, "offset": offset})
-            nodes = data.get("ListStoreOrders", {}).get("nodes", [])
+            data  = _gql(LIST_ORDERS_QUERY, {
+                "storeId": store_id,
+                "connection": {"first": page_size, "offset": offset, "sortBy": "createdAt", "sortOrder": "desc"},
+                "filter": {"shippingStatus": "DELIVERED", "isArchived": False},
+            })
+            nodes = data.get("orders", {}).get("nodes", [])
             if not nodes:
                 break
 
             for order in nodes:
+                # Map productSnapshot.id to wuilt_product_id for matching
+                for item in order.get("items", []):
+                    ps = item.get("productSnapshot") or {}
+                    if ps.get("id") and not item.get("productId"):
+                        item["productId"] = ps["id"]
                 result      = _process_delivered_order(order, db)
                 serials_done += len(result["serials_created"])
                 orders_done  += 1
 
-            if not data["ListStoreOrders"]["pageInfo"]["hasNextPage"]:
+            has_next = data.get("orders", {}).get("pageInfo", {}).get("hasNextPage", False)
+            if not has_next:
                 break
             offset += page_size
 
