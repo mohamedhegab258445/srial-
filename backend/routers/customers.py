@@ -20,20 +20,35 @@ def list_customers(search: Optional[str] = None, db: Session = Depends(get_db), 
             (User.email.ilike(f"%{search}%"))
         )
     users = q.order_by(User.created_at.desc()).all()
+    
+    # Optional: For better performance with large data, we should use func.count in the query, 
+    # but for now we optimize by not running 3 db queries inside the loop for every user.
+    # To keep the fix lightweight and safe, we'll fetch all serials/tickets once or group by.
+    # Actually, the simplest fix for timeouts right now is to just optimize the N+1.
+    
+    # We will query the counts grouped by user_id to avoid N+1
+    from sqlalchemy import func
+    
+    serials_counts = db.query(Serial.user_id, func.count(Serial.id)).group_by(Serial.user_id).all()
+    active_warranties_counts = db.query(Serial.user_id, func.count(Serial.id)).filter(Serial.warranty_status == "active").group_by(Serial.user_id).all()
+    tickets_counts = db.query(Ticket.user_id, func.count(Ticket.id)).group_by(Ticket.user_id).all()
+    
+    # Convert to dictionaries for fast lookup
+    s_map = {k: v for k, v in serials_counts}
+    aw_map = {k: v for k, v in active_warranties_counts}
+    t_map = {k: v for k, v in tickets_counts}
+
     result = []
     for u in users:
-        serials_count = db.query(Serial).filter(Serial.user_id == u.id).count()
-        active_count = db.query(Serial).filter(Serial.user_id == u.id, Serial.warranty_status == "active").count()
-        tickets_count = db.query(Ticket).filter(Ticket.user_id == u.id).count()
         result.append({
             "id": u.id,
             "name": u.name,
             "phone": u.phone,
             "email": u.email,
             "created_at": str(u.created_at)[:10] if u.created_at else "",
-            "serials_count": serials_count,
-            "active_warranties": active_count,
-            "tickets_count": tickets_count,
+            "serials_count": s_map.get(u.id, 0),
+            "active_warranties": aw_map.get(u.id, 0),
+            "tickets_count": t_map.get(u.id, 0),
         })
     return result
 
