@@ -39,13 +39,13 @@ WUILT_API_KEY        = os.getenv("WUILT_API_KEY", "")
 WUILT_STORE_ID       = os.getenv("WUILT_STORE_ID", "")
 WUILT_WEBHOOK_SECRET = os.getenv("WUILT_WEBHOOK_SECRET", "")
 WUILT_DEFAULT_PRODUCT_ID = int(os.getenv("WUILT_DEFAULT_PRODUCT_ID", "1"))
-WUILT_GQL_ENDPOINT   = "https://api.wuilt.com/v3/graphql"
+WUILT_GQL_ENDPOINT   = "https://graphql.wuilt.com/"
 
 def _headers():
     """Always read from env in case it was set after module load."""
     return {
         "Content-Type": "application/json",
-        "x-api-key": os.getenv("WUILT_API_KEY", WUILT_API_KEY),
+        "X-API-KEY": os.getenv("WUILT_API_KEY", WUILT_API_KEY),
     }
 
 def _gql(query: str, variables: dict) -> dict:
