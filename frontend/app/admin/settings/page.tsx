@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback } from "react";
 import Image from "next/image";
 import { api } from "../../../lib/api";
 import { useToast } from "../../../components/ToastProvider";
-import { Globe, Phone, MessageSquare, Save, Shield, Wifi, WifiOff, RefreshCw, LogOut } from "lucide-react";
+import { Globe, Phone, MessageSquare, Save, Shield, Wifi, WifiOff, RefreshCw, LogOut, ShoppingBag, Users, Package, CheckCircle2, Loader2 } from "lucide-react";
 
 interface SettingsMap { [key: string]: string }
 
@@ -63,6 +63,91 @@ const colorMap: Record<string, string> = {
     amber: "bg-amber-50 text-amber-600",
     green: "bg-green-50 text-green-600",
 };
+
+// ─── Wuilt Sync Card ─────────────────────────────────────────────────────────
+
+type SyncTask = "products" | "customers" | "orders" | null;
+
+function WuiltSyncCard() {
+    const [loading, setLoading] = useState<SyncTask>(null);
+    const [results, setResults] = useState<Record<string, string>>({});
+
+    const runSync = async (task: "sync-products" | "sync-customers" | "sync-orders", label: SyncTask) => {
+        setLoading(label);
+        try {
+            await api.post(`/api/webhooks/wuilt/${task}`);
+            // poll status
+            let tries = 0;
+            const poll = setInterval(async () => {
+                tries++;
+                const { data } = await api.get("/api/webhooks/wuilt/sync/status");
+                if (!data.running || tries > 30) {
+                    clearInterval(poll);
+                    setLoading(null);
+                    if (data.result?.error) {
+                        setResults(r => ({ ...r, [label!]: `❌ ${data.result.error}` }));
+                    } else {
+                        const res = data.result;
+                        const msg = label === "products"
+                            ? `✅ ${res.products_created ?? 0} منتج جديد، ${res.products_updated ?? 0} محدّث`
+                            : label === "customers"
+                                ? `✅ ${res.customers_created ?? 0} عميل جديد، ${res.customers_skipped ?? 0} موجود`
+                                : `✅ ${res.orders_synced ?? 0} طلب، ${res.serials_created ?? 0} سيريال`;
+                        setResults(r => ({ ...r, [label!]: msg }));
+                    }
+                }
+            }, 2000);
+        } catch {
+            setLoading(null);
+            setResults(r => ({ ...r, [label!]: "❌ خطأ في الاتصال" }));
+        }
+    };
+
+    const btns = [
+        { task: "sync-products" as const, label: "products" as SyncTask, icon: Package, text: "استيراد المنتجات", desc: "جلب كل المنتجات من Wuilt" },
+        { task: "sync-customers" as const, label: "customers" as SyncTask, icon: Users, text: "استيراد العملاء", desc: "جلب كل العملاء الموجودين" },
+        { task: "sync-orders" as const, label: "orders" as SyncTask, icon: ShoppingBag, text: "استيراد الطلبات المُوصَّلة", desc: "إنشاء السيريالات للطلبات القديمة" },
+    ];
+
+    return (
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+            <div className="flex items-center gap-3 px-6 py-4 border-b border-slate-50">
+                <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                    <ShoppingBag size={18} />
+                </div>
+                <div>
+                    <h2 className="font-semibold text-slate-700">ربط Wuilt Store</h2>
+                    <p className="text-xs text-slate-400">استيراد المنتجات والعملاء والطلبات المُوصَّلة</p>
+                </div>
+            </div>
+            <div className="p-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                {btns.map(b => {
+                    const Icon = b.icon;
+                    const isLoading = loading === b.label;
+                    const result = results[b.label!];
+                    return (
+                        <div key={b.label} className="border border-slate-100 rounded-xl p-4 space-y-2">
+                            <div className="flex items-center gap-2">
+                                <Icon size={16} className="text-blue-500" />
+                                <span className="font-medium text-sm text-slate-700">{b.text}</span>
+                            </div>
+                            <p className="text-xs text-slate-400">{b.desc}</p>
+                            {result && <p className="text-xs font-medium text-slate-600">{result}</p>}
+                            <button
+                                disabled={loading !== null}
+                                onClick={() => runSync(b.task, b.label)}
+                                className="w-full btn btn-ghost btn-sm text-xs flex items-center justify-center gap-1 border border-slate-200"
+                            >
+                                {isLoading ? <Loader2 size={13} className="animate-spin" /> : <CheckCircle2 size={13} />}
+                                {isLoading ? "جاري الاستيراد..." : "ابدأ الاستيراد"}
+                            </button>
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
+}
 
 // ─── UltraMsg Status Card ─────────────────────────────────────────────────────
 
@@ -224,6 +309,9 @@ export default function SettingsPage() {
 
             {/* ── WhatsApp QR Card (top, prominent) ── */}
             <WhatsAppGatewayCard />
+
+            {/* ── Wuilt Sync Card ── */}
+            <WuiltSyncCard />
 
             {/* ── Settings groups ── */}
             {GROUPS.map(group => {
