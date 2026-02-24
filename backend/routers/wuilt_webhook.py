@@ -428,13 +428,16 @@ def _sync_orders_task():
             data  = _gql(LIST_ORDERS_QUERY, {
                 "storeId": store_id,
                 "connection": conn_input,
-                "filter": {"shippingStatus": "DELIVERED", "isArchived": False},
+                "filter": {"isArchived": False},
             })
             nodes = data.get("orders", {}).get("nodes", [])
             if not nodes:
                 break
 
             for order in nodes:
+                if order.get("shippingStatus") != "DELIVERED":
+                    continue
+
                 # Map productSnapshot.id to wuilt_product_id for matching
                 for item in order.get("items", []):
                     ps = item.get("productSnapshot") or {}
