@@ -72,7 +72,7 @@ export default function ProductsPage() {
                             {p.image_url && (
                                 <div className="h-40 bg-slate-50 overflow-hidden">
                                     <Image
-                                        src={`${API_URL}${p.image_url}`}
+                                        src={p.image_url.startsWith('http') ? p.image_url : `${API_URL}${p.image_url}`}
                                         alt={p.name}
                                         className="w-full h-full object-cover"
                                         width={400}
