@@ -70,14 +70,22 @@ export default function ProductsPage() {
                     {products.map(p => (
                         <div key={p.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
                             {p.image_url && (
-                                <div className="h-40 bg-slate-50 overflow-hidden">
-                                    <Image
-                                        src={p.image_url.startsWith('http') ? p.image_url : `${API_URL}${p.image_url}`}
-                                        alt={p.name}
-                                        className="w-full h-full object-cover"
-                                        width={400}
-                                        height={160}
-                                    />
+                                <div className="h-40 bg-slate-50 overflow-hidden relative">
+                                    {p.image_url.startsWith('http') ? (
+                                        <img
+                                            src={p.image_url}
+                                            alt={p.name}
+                                            className="w-full h-full object-cover"
+                                        />
+                                    ) : (
+                                        <Image
+                                            src={`${API_URL}${p.image_url}`}
+                                            alt={p.name}
+                                            className="w-full h-full object-cover"
+                                            width={400}
+                                            height={160}
+                                        />
+                                    )}
                                 </div>
                             )}
                             <div className="p-4">
