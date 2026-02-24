@@ -223,7 +223,7 @@ query ListStoreProducts($connection: ProductsConnectionInput, $filter: ProductsF
       title
       images { src }
     }
-    pageInfo { hasNextPage }
+    pageInfo { hasNextPage endCursor }
   }
 }
 """
@@ -245,7 +245,7 @@ query ListStoreOrders($storeId: ID!, $connection: OrdersConnectionInput, $filter
         productSnapshot { id title }
       }
     }
-    pageInfo { hasNextPage }
+    pageInfo { hasNextPage endCursor }
   }
 }
 """
@@ -263,11 +263,16 @@ def _sync_products_task():
     db = SessionLocal()
     created = updated = 0
     try:
-        offset, page_size = 0, 50
+        page_size = 50
+        cursor = None
         store_id = os.getenv("WUILT_STORE_ID", WUILT_STORE_ID)
         while True:
+            conn_input = {"first": page_size, "sortBy": "createdAt", "sortOrder": "desc"}
+            if cursor:
+                conn_input["after"] = cursor
+
             data = _gql(LIST_PRODUCTS_QUERY, {
-                "connection": {"first": page_size, "offset": offset, "sortBy": "createdAt", "sortOrder": "desc"},
+                "connection": conn_input,
                 "filter": {"storeIds": [store_id], "status": "ACTIVE"},
             })
             nodes = data.get("products", {}).get("nodes", [])
@@ -295,9 +300,12 @@ def _sync_products_task():
                     created += 1
 
             db.commit()
-            if not data.get("products", {}).get("pageInfo", {}).get("hasNextPage", False):
+            page_info = data.get("products", {}).get("pageInfo", {})
+            if not page_info.get("hasNextPage"):
                 break
-            offset += page_size
+            cursor = page_info.get("endCursor")
+            if not cursor:
+                break
 
         _sync_state["result"] = {"products_created": created, "products_updated": updated}
     except Exception as e:
@@ -324,12 +332,17 @@ def _sync_customers_task():
     db = SessionLocal()
     created = skipped = 0
     try:
-        offset, page_size = 0, 50
+        page_size = 50
+        cursor = None
         store_id = os.getenv("WUILT_STORE_ID", WUILT_STORE_ID)
         while True:
+            conn_input = {"first": page_size, "sortBy": "createdAt", "sortOrder": "desc"}
+            if cursor:
+                conn_input["after"] = cursor
+
             data  = _gql(LIST_ORDERS_QUERY, {
                 "storeId": store_id,
-                "connection": {"first": page_size, "offset": offset, "sortBy": "createdAt", "sortOrder": "desc"},
+                "connection": conn_input,
                 "filter": {"isArchived": False},
             })
             nodes = data.get("orders", {}).get("nodes", [])
@@ -372,10 +385,12 @@ def _sync_customers_task():
             except Exception:
                 db.rollback()
 
-            has_next = data.get("orders", {}).get("pageInfo", {}).get("hasNextPage", False)
-            if not has_next:
+            page_info = data.get("orders", {}).get("pageInfo", {})
+            if not page_info.get("hasNextPage"):
                 break
-            offset += page_size
+            cursor = page_info.get("endCursor")
+            if not cursor:
+                break
 
         _sync_state["result"] = {"customers_created": created, "customers_skipped": skipped}
     except Exception as e:
@@ -402,12 +417,17 @@ def _sync_orders_task():
     db = SessionLocal()
     orders_done = serials_done = 0
     try:
-        offset, page_size = 0, 50
+        page_size = 50
+        cursor = None
         store_id = os.getenv("WUILT_STORE_ID", WUILT_STORE_ID)
         while True:
+            conn_input = {"first": page_size, "sortBy": "createdAt", "sortOrder": "desc"}
+            if cursor:
+                conn_input["after"] = cursor
+
             data  = _gql(LIST_ORDERS_QUERY, {
                 "storeId": store_id,
-                "connection": {"first": page_size, "offset": offset, "sortBy": "createdAt", "sortOrder": "desc"},
+                "connection": conn_input,
                 "filter": {"shippingStatus": "DELIVERED", "isArchived": False},
             })
             nodes = data.get("orders", {}).get("nodes", [])
@@ -424,10 +444,12 @@ def _sync_orders_task():
                 serials_done += len(result["serials_created"])
                 orders_done  += 1
 
-            has_next = data.get("orders", {}).get("pageInfo", {}).get("hasNextPage", False)
-            if not has_next:
+            page_info = data.get("orders", {}).get("pageInfo", {})
+            if not page_info.get("hasNextPage"):
                 break
-            offset += page_size
+            cursor = page_info.get("endCursor")
+            if not cursor:
+                break
 
         _sync_state["result"] = {"orders_synced": orders_done, "serials_created": serials_done}
     except Exception as e:
